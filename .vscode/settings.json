@@ -1,0 +1,10 @@
+{
+	"files.associations": {
+		"*.css": "tailwindcss",
+		"*.svelte": "svelte"
+	},
+	"editor.formatOnSave": true,
+	"[svelte]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	}
+}
