@@ -1,1 +1,17 @@
 @import 'tailwindcss';
+
+@theme {
+	/* Typography — Orbit everywhere (set as the default font) */
+	--font-sans: 'Orbit', monospace;
+
+	/* Color tokens */
+	--color-surface: #eeeeee; /* page background, text on dark */
+	--color-ink: #38322f; /* primary text */
+	--color-pill: #1a1a1a; /* active toggle pill */
+	--color-track: #f4f4f4; /* toggle track */
+	--color-muted: #9e9e9e; /* inactive / secondary text */
+	--color-subtle: #7d7d7d; /* accent gray (active step dot, illustration) */
+	--color-placeholder: #d9d9d9; /* placeholder fills, inactive step dots */
+	--color-line: #e5e7eb; /* dividers / light borders */
+	--color-line-strong: #d1d5db; /* card border */
+}
