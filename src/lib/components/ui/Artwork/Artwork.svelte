@@ -7,7 +7,7 @@
 </script>
 
 <section
-	class="flex w-full flex-col border-b border-line lg:w-[44%] lg:shrink-0 lg:border-r lg:border-b-0"
+	class="flex w-full flex-col border-b border-line lg:min-h-0 lg:w-[44%] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-b-0"
 >
 	<!-- vase + caption grouped in a centered, fluid column -->
 	<div
