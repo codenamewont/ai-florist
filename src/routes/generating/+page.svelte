@@ -2,5 +2,5 @@
 	import Header from '$lib/components/ui/Header.svelte';
 </script>
 
-<Header step={6} total={7} />
-<h1>/result page</h1>
+<Header step={4} total={7} />
+<h1>/generating page</h1>

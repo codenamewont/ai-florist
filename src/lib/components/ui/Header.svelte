@@ -1,6 +1,6 @@
 <script>
 	// `step` is 1-based; the matching dot is highlighted as the current step.
-	let { step = 1, total = 6 } = $props();
+	let { step = 1, total = 7 } = $props();
 
 	const dots = $derived(Array.from({ length: total }, (_, i) => i));
 </script>

@@ -16,7 +16,7 @@
 <div
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
-	<Header step={3} total={6} />
+	<Header step={2} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork />
