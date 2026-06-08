@@ -11,12 +11,11 @@
 	];
 </script>
 
-<div class="moodboard w-full lg:flex-1">
+<div class="moodboard w-full min-h-0 flex-1">
 	{#each tiles as tile (tile.key)}
 		<UploadTile
 			label={tile.label}
-			class="{tile.aspect} lg:aspect-auto"
-			style="grid-area: {tile.key}"
+			class="tile tile-{tile.key} h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto {tile.aspect}"
 		/>
 	{/each}
 </div>
@@ -25,13 +24,11 @@
 	.moodboard {
 		display: grid;
 		gap: 0;
-		grid-template-columns: 1fr;
-	}
-
-	@media (min-width: 640px) {
-		.moodboard {
-			grid-template-columns: 1fr 1fr;
-		}
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: 1fr 1fr;
+		width: 100%;
+		flex: 1;
+		min-height: 0;
 	}
 
 	@media (min-width: 1024px) {
@@ -44,6 +41,22 @@
 				'character location'
 				'character location';
 			min-height: 34rem;
+		}
+
+		:global(.tile-color) {
+			grid-area: color;
+		}
+
+		:global(.tile-season) {
+			grid-area: season;
+		}
+
+		:global(.tile-character) {
+			grid-area: character;
+		}
+
+		:global(.tile-location) {
+			grid-area: location;
 		}
 	}
 </style>
