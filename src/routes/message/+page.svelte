@@ -2,38 +2,34 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
+	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
+	import MessageForm from '$lib/components/ui/message/MessageForm.svelte';
 	import { getFlowObject, loadFlow, saveFlow } from '$lib/flowerFlow/session.js';
 
 	const flow = loadFlow();
 	const userInput = getFlowObject('userInput') ?? {};
 
-	let recipientName = $state(flow.recipientName ?? '');
-	let cardMessage = $state(flow.cardMessage ?? '');
-	let deliveryNotes = $state(flow.deliveryNotes ?? '');
+	let message = $state(typeof flow.cardMessage === 'string' ? flow.cardMessage : '');
+	let error = $state('');
 
-	function handleSubmit(event) {
-		event.preventDefault();
+	const artworkTitle = $derived(message ? 'Your message' : 'Title');
 
+	const artworkDescription = $derived(message || 'Description Description Description');
+
+	function handleContinue() {
 		const current = loadFlow();
 		if (!current.jobId) {
-			alert('Upload an image first.');
+			error = 'Please upload an image first.';
 			goto(resolve('/upload'));
 			return;
 		}
 
-		const mergedNotes = [
-			userInput.notes,
-			recipientName ? `Recipient: ${recipientName}` : '',
-			cardMessage ? `Card message: ${cardMessage}` : '',
-			deliveryNotes ? `Delivery notes: ${deliveryNotes}` : ''
-		]
+		const mergedNotes = [userInput.notes, message ? `Card message: ${message}` : '']
 			.filter(Boolean)
 			.join('\n\n');
 
 		saveFlow({
-			recipientName,
-			cardMessage,
-			deliveryNotes,
+			cardMessage: message,
 			userInput: { ...userInput, notes: mergedNotes || undefined }
 		});
 
@@ -41,42 +37,37 @@
 	}
 </script>
 
-<div class="min-h-dvh bg-surface text-ink">
+<!--
+	create / upload와 같은 2열 레이아웃.
+	우측 MessageForm에서 프리셋 메시지를 pill 버튼으로 선택합니다.
+-->
+<div
+	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
+>
 	<Header step={3} total={7} />
 
-	<main class="mx-auto max-w-xl px-6 py-10">
-		<h1 class="mb-2 text-2xl">Message</h1>
-		<p class="mb-8 text-sm text-muted">Add details for the florist and card message.</p>
+	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
+		<Artwork title={artworkTitle} description={artworkDescription} />
 
-		<form onsubmit={handleSubmit} class="space-y-5">
-			<label class="block space-y-2">
-				<span class="text-sm">Recipient name</span>
-				<input bind:value={recipientName} class="w-full border border-line bg-surface px-3 py-2" />
-			</label>
+		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
+			<MessageForm bind:message />
 
-			<label class="block space-y-2">
-				<span class="text-sm">Card message</span>
-				<textarea
-					bind:value={cardMessage}
-					rows="4"
-					class="w-full border border-line bg-surface px-3 py-2"
-					placeholder="Happy birthday! Wishing you a soft and lovely day."
-				></textarea>
-			</label>
-
-			<label class="block space-y-2">
-				<span class="text-sm">Delivery notes</span>
-				<textarea
-					bind:value={deliveryNotes}
-					rows="3"
-					class="w-full border border-line bg-surface px-3 py-2"
-					placeholder="Please keep the bouquet airy and not too structured."
-				></textarea>
-			</label>
-
-			<button type="submit" class="bg-pill px-6 py-3 text-sm text-surface"
-				>Continue to generating</button
+			<div
+				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 px-4 pb-5 lg:absolute lg:right-8 lg:bottom-8 lg:left-auto lg:w-72 lg:px-0"
 			>
-		</form>
+				{#if error}
+					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
+						{error}
+					</p>
+				{/if}
+				<button
+					type="button"
+					onclick={handleContinue}
+					class="w-full bg-pill px-4 py-3 text-sm text-surface"
+				>
+					Continue to generating
+				</button>
+			</div>
+		</section>
 	</main>
 </div>
