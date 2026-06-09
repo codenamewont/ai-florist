@@ -1,23 +1,70 @@
 <script>
 	import UploadTile from './UploadTile.svelte';
 
-	// One reference image per category, laid out as an interlocking collage
-	// (offset seams, varied heights) instead of equal quarters.
+	let { primaryFile = $bindable(null) } = $props();
+
+	let colorFile = $state(null);
+	let seasonFile = $state(null);
+	let characterFile = $state(null);
+	let locationFile = $state(null);
+
+	$effect(() => {
+		primaryFile = colorFile ?? seasonFile ?? characterFile ?? locationFile ?? null;
+	});
+
 	const tiles = [
-		{ key: 'color', label: 'Color', aspect: 'aspect-4/5' },
-		{ key: 'season', label: 'Season', aspect: 'aspect-4/3' },
-		{ key: 'character', label: 'Character', aspect: 'aspect-4/3' },
-		{ key: 'location', label: 'Location', aspect: 'aspect-4/5' }
+		{
+			key: 'color',
+			label: 'Color',
+			aspect: 'aspect-4/5',
+			bindFile: () => colorFile,
+			setFile: (v) => (colorFile = v)
+		},
+		{
+			key: 'season',
+			label: 'Season',
+			aspect: 'aspect-4/3',
+			bindFile: () => seasonFile,
+			setFile: (v) => (seasonFile = v)
+		},
+		{
+			key: 'character',
+			label: 'Character',
+			aspect: 'aspect-4/3',
+			bindFile: () => characterFile,
+			setFile: (v) => (characterFile = v)
+		},
+		{
+			key: 'location',
+			label: 'Location',
+			aspect: 'aspect-4/5',
+			bindFile: () => locationFile,
+			setFile: (v) => (locationFile = v)
+		}
 	];
 </script>
 
-<div class="moodboard w-full min-h-0 flex-1">
-	{#each tiles as tile (tile.key)}
-		<UploadTile
-			label={tile.label}
-			class="tile tile-{tile.key} h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto {tile.aspect}"
-		/>
-	{/each}
+<div class="moodboard min-h-0 w-full flex-1">
+	<UploadTile
+		label="Color"
+		bind:file={colorFile}
+		class="tile tile-color aspect-4/5 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
+	/>
+	<UploadTile
+		label="Season"
+		bind:file={seasonFile}
+		class="tile tile-season aspect-4/3 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
+	/>
+	<UploadTile
+		label="Character"
+		bind:file={characterFile}
+		class="tile tile-character aspect-4/3 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
+	/>
+	<UploadTile
+		label="Location"
+		bind:file={locationFile}
+		class="tile tile-location aspect-4/5 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
+	/>
 </div>
 
 <style>

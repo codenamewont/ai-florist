@@ -1,12 +1,17 @@
 <script>
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import ContextForm from '$lib/components/ui/create/ContextForm.svelte';
+	import { loadFlow, saveFlow } from '$lib/flowerFlow/session.js';
 
-	let who = $state(null);
-	let whatFor = $state(null);
-	let style = $state(null);
-	let budget = $state(50_000);
+	const savedInput = loadFlow().userInput ?? {};
+
+	let who = $state(savedInput.relationship ?? null);
+	let whatFor = $state(savedInput.occasion ?? null);
+	let style = $state(savedInput.style ?? null);
+	let budget = $state(savedInput.budget ?? 50_000);
 
 	const hasAnySelection = $derived(who !== null || whatFor !== null || style !== null);
 
@@ -21,6 +26,18 @@
 			? `${style ?? '—'} style · ₩${budget.toLocaleString('ko-KR')} budget`
 			: 'Description Description Description'
 	);
+
+	function handleContinue() {
+		saveFlow({
+			userInput: {
+				relationship: who ?? undefined,
+				occasion: whatFor ?? undefined,
+				style: style ?? undefined,
+				budget: Number(budget)
+			}
+		});
+		goto(resolve('/upload'));
+	}
 </script>
 
 <!--
@@ -30,13 +47,25 @@
 <div
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
-	<Header step={1} total={6} />
+	<Header step={1} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork title={artworkTitle} description={artworkDescription} />
 
 		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
 			<ContextForm bind:who bind:whatFor bind:style bind:budget />
+
+			<div
+				class="fixed right-0 bottom-0 left-0 z-20 px-4 pb-5 lg:absolute lg:right-8 lg:bottom-8 lg:left-auto lg:w-72 lg:px-0"
+			>
+				<button
+					type="button"
+					onclick={handleContinue}
+					class="w-full bg-pill px-4 py-3 text-sm text-surface"
+				>
+					Continue to upload
+				</button>
+			</div>
 		</section>
 	</main>
 </div>
