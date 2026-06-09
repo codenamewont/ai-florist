@@ -111,6 +111,8 @@
 
 			await goto(resolve('/options'));
 		} catch (err) {
+			if (!active) return;
+
 			// The server lost this job (e.g. a dev-server restart wipes the in-memory
 			// job store). The stored jobId is dead, so retrying is pointless — clear
 			// the stale flow and send the user back to re-upload.

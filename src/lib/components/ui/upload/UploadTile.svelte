@@ -1,6 +1,4 @@
 <script>
-	import { onDestroy } from 'svelte';
-
 	// A single click-to-upload slot: a light bordered placeholder when empty,
 	// the chosen image (cover) when filled. Layout (size / grid placement) is
 	// supplied by the parent via `class` and `style` so the same tile works in
@@ -12,13 +10,19 @@
 	function pick(event) {
 		const picked = event.currentTarget.files?.[0];
 		if (!picked) return;
-		if (preview) URL.revokeObjectURL(preview);
 		file = picked;
-		preview = URL.createObjectURL(picked);
 	}
 
-	onDestroy(() => {
-		if (preview) URL.revokeObjectURL(preview);
+	// 부모에서 File을 주입할 때(Dev seed 등) 미리보기 동기화
+	$effect(() => {
+		if (!file) {
+			preview = null;
+			return;
+		}
+
+		const url = URL.createObjectURL(file);
+		preview = url;
+		return () => URL.revokeObjectURL(url);
 	});
 </script>
 

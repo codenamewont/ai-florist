@@ -3,56 +3,66 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
-	import { fetchJob, selectOption, toDataUrl } from '$lib/flowerFlow/api.js';
+	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
+	import OptionsPanel from '$lib/components/ui/options/OptionsPanel.svelte';
+	import { fetchJob, selectOption } from '$lib/flowerFlow/api.js';
 	import { getFlowString } from '$lib/flowerFlow/session.js';
 
 	const jobId = getFlowString('jobId');
 
-	// Images are large base64 blobs that don't fit in sessionStorage, so they live
-	// server-side. Fetch them by jobId rather than reading them from the flow store.
 	let images = $state({});
+	let recipe = $state(null);
 	let loading = $state(true);
 	let loadingSize = $state(null);
 	let error = $state('');
+	let selectedSize = $state(null);
 
-	const options = [
-		{ size: 'S', label: 'Small', description: 'Simple, delicate, affordable' },
-		{ size: 'M', label: 'Medium', description: 'Balanced standard bouquet volume' },
-		{ size: 'L', label: 'Large', description: 'Fuller, premium and abundant' }
-	];
+	const artworkTitle = $derived(recipe?.concept ?? 'Title');
+
+	const artworkDescription = $derived(
+		recipe?.mainFlowers?.length
+			? `${recipe.mainFlowers.join(', ')} · ${recipe.wrapping ?? 'Custom wrap'}`
+			: 'Description Description Description'
+	);
 
 	onMount(async () => {
 		if (!jobId) {
-			await goto(resolve('/create'));
+			// 와이어프레임 확인용: job 없어도 레이아웃은 보여 줌
+			loading = false;
+			error = 'Start from /create and complete the flow to see generated bouquets.';
 			return;
 		}
 
 		try {
 			const job = await fetchJob(jobId);
 			if (!job.images?.M) {
-				// Not generated yet — (re)run generation.
 				await goto(resolve('/generating'));
 				return;
 			}
 			images = job.images;
+			recipe = job.recipe ?? null;
 			loading = false;
 		} catch {
-			// Job missing on the server (e.g. a dev-server restart wiped it) — restart.
 			await goto(resolve('/generating'));
 		}
 	});
 
-	async function choose(size) {
-		if (!jobId) {
-			await goto(resolve('/create'));
+	async function handleContinue() {
+		if (!selectedSize) {
+			error = 'Choose a bouquet size to continue.';
 			return;
 		}
 
-		loadingSize = size;
+		if (!jobId) {
+			error = 'Complete create → upload → message → generating first.';
+			return;
+		}
+
+		loadingSize = selectedSize;
 		error = '';
 
 		try {
-			await selectOption(jobId, /** @type {'S'|'M'|'L'} */ (size));
+			await selectOption(jobId, /** @type {'S'|'M'|'L'} */ (selectedSize));
 			await goto(resolve('/result'));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Selection failed';
@@ -61,47 +71,34 @@
 	}
 </script>
 
-<div class="min-h-dvh bg-surface text-ink">
+<div
+	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
+>
 	<Header step={5} total={7} />
 
-	<main class="mx-auto max-w-5xl px-6 py-10">
-		<h1 class="mb-2 text-2xl">Choose your bouquet size</h1>
-		<p class="mb-8 text-sm text-muted">Pick one of the generated options.</p>
+	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
+		<Artwork title={artworkTitle} description={artworkDescription} />
 
-		{#if error}
-			<p class="mb-4 text-sm text-red-600">{error}</p>
-		{/if}
+		<section class="relative flex min-h-0 flex-1 flex-col pb-[4.75rem] lg:overflow-y-auto lg:pb-0">
+			<OptionsPanel {images} {loading} bind:selectedSize />
 
-		{#if loading}
-			<p class="text-sm text-muted">Loading options...</p>
-		{/if}
-
-		<div class="grid gap-6 md:grid-cols-3" class:hidden={loading}>
-			{#each options as option (option.size)}
+			<div
+				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 px-4 pb-5 lg:absolute lg:right-8 lg:bottom-8 lg:left-auto lg:w-72 lg:px-0"
+			>
+				{#if error}
+					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
+						{error}
+					</p>
+				{/if}
 				<button
 					type="button"
-					disabled={Boolean(loadingSize)}
-					onclick={() => choose(option.size)}
-					class="border border-line bg-track p-4 text-left transition hover:border-line-strong disabled:opacity-50"
+					disabled={!selectedSize || Boolean(loadingSize)}
+					onclick={handleContinue}
+					class="w-full bg-pill px-4 py-3 text-sm text-surface disabled:opacity-50"
 				>
-					<div class="mb-4 aspect-[3/4] overflow-hidden bg-surface">
-						{#if images[option.size]}
-							<img
-								src={toDataUrl(images[option.size])}
-								alt="{option.label} bouquet option"
-								class="h-full w-full object-cover"
-							/>
-						{:else}
-							<div class="flex h-full items-center justify-center text-sm text-muted">No image</div>
-						{/if}
-					</div>
-					<h2 class="text-lg">{option.label}</h2>
-					<p class="mt-1 text-sm text-muted">{option.description}</p>
-					<p class="mt-4 text-sm">
-						{loadingSize === option.size ? 'Selecting...' : 'Select this option'}
-					</p>
+					{loadingSize ? 'Selecting...' : 'Continue to result'}
 				</button>
-			{/each}
-		</div>
+			</div>
+		</section>
 	</main>
 </div>

@@ -6,17 +6,39 @@
 	import MoodboardGrid from '$lib/components/ui/upload/MoodboardGrid.svelte';
 	import SnsFeedUpload from '$lib/components/ui/upload/SnsFeedUpload.svelte';
 	import { analyzeMood } from '$lib/flowerFlow/api.js';
-	import { getFlowObject, saveFlow } from '$lib/flowerFlow/session.js';
+	import {
+		deleteFlowKey,
+		getFlowUserInput,
+		isDevSeeded,
+		loadFlow,
+		saveFlow
+	} from '$lib/flowerFlow/session.js';
 
-	let mode = $state('moodboard');
+	const savedFlow = loadFlow();
+	const userInput = getFlowUserInput();
+
+	const devUpload = savedFlow.devUpload;
+	let mode = $state(
+		isDevSeeded() && devUpload?.active && typeof devUpload.mode === 'string'
+			? devUpload.mode
+			: 'moodboard'
+	);
 	let primaryFile = $state(null);
 	let loading = $state(false);
 	let error = $state('');
 
-	const userInput = getFlowObject('userInput') ?? {};
-
 	async function continueToMessage() {
 		error = '';
+
+		const flow = loadFlow();
+		if (flow.jobId && flow.moodAnalysis) {
+			// Dev Fill 후 바로 message로 넘어갈 때 더미 플래그가 남지 않도록 정리
+			deleteFlowKey('devUpload');
+			deleteFlowKey('devSeeded');
+			deleteFlowKey('cardMessage');
+			await goto(resolve('/message'));
+			return;
+		}
 
 		if (!primaryFile) {
 			error = 'Upload at least one image to continue.';
@@ -27,6 +49,10 @@
 
 		try {
 			const result = await analyzeMood(primaryFile, userInput);
+			deleteFlowKey('devUpload');
+			deleteFlowKey('devSeeded');
+			deleteFlowKey('devMessageSnapshot');
+			deleteFlowKey('cardMessage');
 			saveFlow({
 				jobId: result.jobId,
 				moodAnalysis: result.moodAnalysis,

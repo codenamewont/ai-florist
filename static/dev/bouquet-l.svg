@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024">
+  <rect width="768" height="1024" fill="#ebe4dc"/>
+  <rect x="40" y="680" width="688" height="240" rx="12" fill="#d4cbc2"/>
+  <text x="384" y="640" text-anchor="middle" font-size="28" fill="#8b7355" font-family="Georgia, serif">Large bouquet</text>
+  <circle cx="240" cy="390" r="54" fill="#f4a6b8"/>
+  <circle cx="330" cy="350" r="68" fill="#f8c8d4"/>
+  <circle cx="420" cy="340" r="72" fill="#efb4c4"/>
+  <circle cx="510" cy="380" r="58" fill="#ffd6e0"/>
+  <circle cx="560" cy="450" r="50" fill="#ffeef2"/>
+  <circle cx="200" cy="440" r="48" fill="#f8d0da"/>
+  <circle cx="280" cy="480" r="44" fill="#ffd6e0"/>
+  <rect x="360" y="420" width="48" height="300" rx="8" fill="#4d6f53"/>
+  <text x="384" y="960" text-anchor="middle" font-size="36" fill="#6b5b53" font-family="Arial">L</text>
+</svg>

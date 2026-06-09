@@ -1,20 +1,49 @@
 <script>
+	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MessageForm from '$lib/components/ui/message/MessageForm.svelte';
-	import { getFlowObject, loadFlow, saveFlow } from '$lib/flowerFlow/session.js';
+	import { skipDevImages } from '$lib/flowerFlow/devSeed.js';
+	import {
+		consumeDevMessageSnapshot,
+		deleteFlowKey,
+		getFlowObject,
+		getFlowUserInput,
+		isDevSeeded,
+		loadFlow,
+		saveFlow
+	} from '$lib/flowerFlow/session.js';
 
-	const flow = loadFlow();
-	const userInput = getFlowObject('userInput') ?? {};
+	const userInput = getFlowUserInput();
 
-	let message = $state(typeof flow.cardMessage === 'string' ? flow.cardMessage : '');
+	// 항상 빈 메시지로 시작 — Dev Fill은 onMount에서 1회만 스냅샷 적용
+	let message = $state('');
 	let error = $state('');
+	let skipping = $state(false);
 
 	const artworkTitle = $derived(message ? 'Your message' : 'Title');
 
 	const artworkDescription = $derived(message || 'Description Description Description');
+
+	onMount(() => {
+		const hadSnapshot = !!getFlowObject('devMessageSnapshot');
+		const snap = consumeDevMessageSnapshot();
+
+		if (snap) {
+			message = snap;
+			return;
+		}
+
+		// 예전 세션에 devSeeded / cardMessage만 남은 경우 — 더미 메시지 복원 차단
+		if (isDevSeeded() && !hadSnapshot) {
+			deleteFlowKey('devSeeded');
+			deleteFlowKey('devUpload');
+			deleteFlowKey('cardMessage');
+		}
+	});
 
 	function handleContinue() {
 		const current = loadFlow();
@@ -24,16 +53,42 @@
 			return;
 		}
 
-		const mergedNotes = [userInput.notes, message ? `Card message: ${message}` : '']
-			.filter(Boolean)
-			.join('\n\n');
+		saveMessageToFlow();
+		goto(resolve('/generating'));
+	}
+
+	function saveMessageToFlow() {
+		const mergedNotes = message ? `Card message: ${message}` : '';
 
 		saveFlow({
 			cardMessage: message,
 			userInput: { ...userInput, notes: mergedNotes || undefined }
 		});
+	}
 
-		goto(resolve('/generating'));
+	async function skipWithDummyImages() {
+		const current = loadFlow();
+		const jobId = typeof current.jobId === 'string' ? current.jobId : '';
+
+		if (!jobId) {
+			error = 'Please upload an image first.';
+			goto(resolve('/upload'));
+			return;
+		}
+
+		skipping = true;
+		error = '';
+		saveMessageToFlow();
+
+		const result = await skipDevImages(jobId);
+
+		if (!result.ok) {
+			skipping = false;
+			error = result.error;
+			return;
+		}
+
+		await goto(resolve('/options'));
 	}
 </script>
 
@@ -59,6 +114,17 @@
 					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
 						{error}
 					</p>
+				{/if}
+				{#if dev}
+					<button
+						type="button"
+						disabled={skipping}
+						onclick={skipWithDummyImages}
+						class="w-full rounded border border-dashed border-subtle/60 px-4 py-2.5 text-xs text-muted hover:border-subtle hover:text-ink disabled:opacity-50"
+						title="AI 생성 없이 더미 이미지로 options로 이동 (개발용)"
+					>
+						{skipping ? 'Skipping…' : 'Dev: Skip to options (dummy images)'}
+					</button>
 				{/if}
 				<button
 					type="button"

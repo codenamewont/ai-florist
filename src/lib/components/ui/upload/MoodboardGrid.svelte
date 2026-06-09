@@ -1,5 +1,8 @@
 <script>
+	import { onMount } from 'svelte';
 	import UploadTile from './UploadTile.svelte';
+	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
+	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
 	let { primaryFile = $bindable(null) } = $props();
 
@@ -12,36 +15,23 @@
 		primaryFile = colorFile ?? seasonFile ?? characterFile ?? locationFile ?? null;
 	});
 
-	const tiles = [
-		{
-			key: 'color',
-			label: 'Color',
-			aspect: 'aspect-4/5',
-			bindFile: () => colorFile,
-			setFile: (v) => (colorFile = v)
-		},
-		{
-			key: 'season',
-			label: 'Season',
-			aspect: 'aspect-4/3',
-			bindFile: () => seasonFile,
-			setFile: (v) => (seasonFile = v)
-		},
-		{
-			key: 'character',
-			label: 'Character',
-			aspect: 'aspect-4/3',
-			bindFile: () => characterFile,
-			setFile: (v) => (characterFile = v)
-		},
-		{
-			key: 'location',
-			label: 'Location',
-			aspect: 'aspect-4/5',
-			bindFile: () => locationFile,
-			setFile: (v) => (locationFile = v)
+	onMount(async () => {
+		const devUpload = getFlowObject('devUpload');
+		if (!isDevSeeded() || !devUpload?.active) return;
+
+		const tiles = devUpload.moodboard;
+		if (!tiles || typeof tiles !== 'object') return;
+
+		try {
+			const files = await hydrateDevUpload(/** @type {Record<string, string>} */ (tiles));
+			if (files.color) colorFile = files.color;
+			if (files.season) seasonFile = files.season;
+			if (files.character) characterFile = files.character;
+			if (files.location) locationFile = files.location;
+		} catch {
+			// dev seed 실패 시 빈 타일 유지
 		}
-	];
+	});
 </script>
 
 <div class="moodboard min-h-0 w-full flex-1">
