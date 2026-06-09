@@ -1,14 +1,25 @@
 <script>
 	import UploadTile from './UploadTile.svelte';
 
-	// Two SNS feed screenshots. On desktop they fill the panel edge-to-edge in
-	// a staggered composition (one raised on the right, one dropped on the
-	// left); below that they fall back to a simple side-by-side / stacked grid.
+	let { primaryFile = $bindable(null) } = $props();
+
+	let firstFile = $state(null);
+	let secondFile = $state(null);
+
+	$effect(() => {
+		primaryFile = firstFile ?? secondFile ?? null;
+	});
 </script>
 
-<div class="feed w-full min-h-0 flex-1">
-	<UploadTile class="tile-one h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto aspect-4/5" />
-	<UploadTile class="tile-two h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto aspect-4/5" />
+<div class="feed min-h-0 w-full flex-1">
+	<UploadTile
+		bind:file={firstFile}
+		class="tile-one aspect-4/5 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
+	/>
+	<UploadTile
+		bind:file={secondFile}
+		class="tile-two aspect-4/5 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
+	/>
 </div>
 
 <style>

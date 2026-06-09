@@ -5,15 +5,16 @@
 	// the chosen image (cover) when filled. Layout (size / grid placement) is
 	// supplied by the parent via `class` and `style` so the same tile works in
 	// both the moodboard and the SNS feed.
-	let { label = null, class: klass = '', style = '' } = $props();
+	let { label = null, class: klass = '', style = '', file = $bindable(null) } = $props();
 
 	let preview = $state(null);
 
 	function pick(event) {
-		const file = event.currentTarget.files?.[0];
-		if (!file) return;
+		const picked = event.currentTarget.files?.[0];
+		if (!picked) return;
 		if (preview) URL.revokeObjectURL(preview);
-		preview = URL.createObjectURL(file);
+		file = picked;
+		preview = URL.createObjectURL(picked);
 	}
 
 	onDestroy(() => {
