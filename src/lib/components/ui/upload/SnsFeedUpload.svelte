@@ -1,5 +1,8 @@
 <script>
+	import { onMount } from 'svelte';
 	import UploadTile from './UploadTile.svelte';
+	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
+	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
 	let { primaryFile = $bindable(null) } = $props();
 
@@ -8,6 +11,22 @@
 
 	$effect(() => {
 		primaryFile = firstFile ?? secondFile ?? null;
+	});
+
+	onMount(async () => {
+		const devUpload = getFlowObject('devUpload');
+		if (!isDevSeeded() || !devUpload?.active) return;
+
+		const tiles = devUpload.sns;
+		if (!tiles || typeof tiles !== 'object') return;
+
+		try {
+			const files = await hydrateDevUpload(/** @type {Record<string, string>} */ (tiles));
+			if (files.first) firstFile = files.first;
+			if (files.second) secondFile = files.second;
+		} catch {
+			// dev seed 실패 시 빈 타일 유지
+		}
 	});
 </script>
 

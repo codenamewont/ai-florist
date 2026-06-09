@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
  * @typedef {Object} UserInput
  * @property {string} [relationship]
  * @property {string} [occasion]
+ * @property {string} [style]
  * @property {number} [budget]
  * @property {string} [season]
  * @property {string} [notes]

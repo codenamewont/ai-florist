@@ -1,17 +1,23 @@
 <script>
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import ContextForm from '$lib/components/ui/create/ContextForm.svelte';
-	import { loadFlow, saveFlow } from '$lib/flowerFlow/session.js';
+	import {
+		consumeDevCreateSnapshot,
+		deleteFlowKey,
+		getFlowObject,
+		isDevSeeded,
+		saveFlow
+	} from '$lib/flowerFlow/session.js';
 
-	const savedInput = loadFlow().userInput ?? {};
-
-	let who = $state(savedInput.relationship ?? null);
-	let whatFor = $state(savedInput.occasion ?? null);
-	let style = $state(savedInput.style ?? null);
-	let budget = $state(savedInput.budget ?? 50_000);
+	// 항상 빈 폼으로 시작 — Dev Fill은 onMount에서 1회만 스냅샷 적용
+	let who = $state(null);
+	let whatFor = $state(null);
+	let style = $state(null);
+	let budget = $state(50_000);
 
 	const hasAnySelection = $derived(who !== null || whatFor !== null || style !== null);
 
@@ -27,7 +33,33 @@
 			: 'Description Description Description'
 	);
 
+	onMount(() => {
+		const hadSnapshot = !!getFlowObject('devCreateSnapshot');
+		const snap = consumeDevCreateSnapshot();
+
+		if (snap) {
+			who = snap.who;
+			whatFor = snap.whatFor;
+			style = snap.style;
+			budget = snap.budget;
+			return;
+		}
+
+		// 예전 세션에 devSeeded만 남은 경우 — 더미 폼 복원 차단
+		if (isDevSeeded() && !hadSnapshot) {
+			deleteFlowKey('devSeeded');
+			deleteFlowKey('devUpload');
+			deleteFlowKey('devMessageSnapshot');
+			deleteFlowKey('cardMessage');
+		}
+	});
+
 	function handleContinue() {
+		deleteFlowKey('devUpload');
+		deleteFlowKey('devSeeded');
+		deleteFlowKey('devCreateSnapshot');
+		deleteFlowKey('devMessageSnapshot');
+		deleteFlowKey('cardMessage');
 		saveFlow({
 			userInput: {
 				relationship: who ?? undefined,

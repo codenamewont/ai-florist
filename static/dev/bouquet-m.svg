@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024">
+  <rect width="768" height="1024" fill="#f0ebe6"/>
+  <rect x="60" y="700" width="648" height="220" rx="12" fill="#ddd4cb"/>
+  <text x="384" y="660" text-anchor="middle" font-size="28" fill="#8b7355" font-family="Georgia, serif">Medium bouquet</text>
+  <circle cx="280" cy="400" r="52" fill="#f4a6b8"/>
+  <circle cx="360" cy="360" r="64" fill="#f8c8d4"/>
+  <circle cx="440" cy="380" r="58" fill="#efb4c4"/>
+  <circle cx="500" cy="430" r="46" fill="#ffd6e0"/>
+  <circle cx="260" cy="450" r="42" fill="#ffeef2"/>
+  <rect x="364" y="440" width="40" height="280" rx="8" fill="#5a7d60"/>
+  <text x="384" y="960" text-anchor="middle" font-size="36" fill="#6b5b53" font-family="Arial">M</text>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500">
+  <rect width="400" height="500" fill="#d4e4f0"/>
+  <rect x="80" y="280" width="240" height="120" rx="8" fill="#8ab4cc"/>
+  <polygon points="200,80 260,200 140,200" fill="#5a8aaa"/>
+  <text x="200" y="450" text-anchor="middle" font-size="22" fill="#3d6a82" font-family="Arial">Location</text>
+</svg>
