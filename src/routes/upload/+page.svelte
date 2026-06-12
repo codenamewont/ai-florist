@@ -115,14 +115,20 @@
 				</button>
 
 				<div
-					class="grid w-full grid-cols-2 items-center rounded-full bg-white p-1.5 shadow-xl ring-1 ring-black/5 lg:order-1 lg:flex-1"
+					class="relative grid w-full grid-cols-2 items-center rounded-full bg-white p-1.5 shadow-xl ring-1 ring-black/5 lg:order-1 lg:flex-1"
 				>
+					<!-- sliding dark thumb: covers one cell, glides to the active one -->
+					<span
+						class="pointer-events-none absolute inset-y-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-full bg-pill transition-transform duration-300 ease-out motion-reduce:transition-none"
+						style:transform={mode === 'moodboard' ? 'translateX(100%)' : 'translateX(0)'}
+						aria-hidden="true"
+					></span>
 					<button
 						type="button"
 						onclick={() => (mode = 'sns')}
 						class={[
-							'w-full rounded-full px-3 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
-							mode === 'sns' ? 'bg-pill text-surface' : 'text-muted hover:text-ink'
+							'relative z-10 w-full rounded-full px-3 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
+							mode === 'sns' ? 'text-surface' : 'text-muted hover:text-ink'
 						]}
 					>
 						Upload SNS Feed
@@ -131,8 +137,8 @@
 						type="button"
 						onclick={() => (mode = 'moodboard')}
 						class={[
-							'w-full rounded-full px-3 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
-							mode === 'moodboard' ? 'bg-pill text-surface' : 'text-muted hover:text-ink'
+							'relative z-10 w-full rounded-full px-3 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
+							mode === 'moodboard' ? 'text-surface' : 'text-muted hover:text-ink'
 						]}
 					>
 						Build Moodboard

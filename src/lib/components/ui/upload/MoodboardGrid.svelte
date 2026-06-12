@@ -1,7 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import UploadTile from './UploadTile.svelte';
-	import flowerUrl from '$lib/assets/flower.svg';
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
@@ -13,7 +12,8 @@
 	let locationFile = $state(null);
 
 	$effect(() => {
-		primaryFile = colorFile ?? seasonFile ?? characterFile ?? locationFile ?? null;
+		const next = colorFile ?? seasonFile ?? characterFile ?? locationFile ?? null;
+		if (primaryFile !== next) primaryFile = next;
 	});
 
 	onMount(async () => {
@@ -41,9 +41,6 @@
 		<span class="mood-number number-season">(02)</span>
 		<span class="mood-number number-character">(03)</span>
 		<span class="mood-number number-location">(04)</span>
-		<img class="spark spark-one" src={flowerUrl} alt="" aria-hidden="true" />
-		<img class="spark spark-two" src={flowerUrl} alt="" aria-hidden="true" />
-		<img class="spark spark-three" src={flowerUrl} alt="" aria-hidden="true" />
 		<span class="mood-caption">{caption}</span>
 
 		<UploadTile
@@ -80,7 +77,7 @@
 
 	.collage {
 		position: relative;
-		width: min(100%, 32rem);
+		width: min(100%, 34rem);
 		height: 100%;
 		aspect-ratio: 4 / 5.2;
 		max-height: 44rem;
@@ -95,7 +92,7 @@
 	/* 01 — top-left portrait */
 	:global(.tile-color) {
 		top: 8%;
-		left: 7%;
+		left: 4%;
 		width: 30%;
 		aspect-ratio: 3 / 4;
 	}
@@ -103,7 +100,7 @@
 	/* 02 — right portrait, dips below the top of 01 */
 	:global(.tile-season) {
 		top: 13%;
-		right: 4%;
+		right: 3%;
 		width: 29%;
 		aspect-ratio: 3 / 4;
 	}
@@ -111,7 +108,7 @@
 	/* 03 — landscape, lower-left */
 	:global(.tile-character) {
 		top: 49%;
-		left: 17%;
+		left: 10%;
 		width: 36%;
 		aspect-ratio: 4 / 3;
 	}
@@ -119,18 +116,17 @@
 	/* 04 — bottom-right portrait */
 	:global(.tile-location) {
 		top: 62%;
-		right: 7%;
+		right: 4%;
 		width: 29%;
 		aspect-ratio: 3 / 4;
 	}
 
 	.mood-number,
-	.mood-caption,
-	.spark {
+	.mood-caption {
 		position: absolute;
 		z-index: 2;
 		pointer-events: none;
-		color: #111;
+		color: var(--color-ink);
 	}
 
 	.mood-number {
@@ -140,7 +136,7 @@
 
 	.number-color {
 		top: 13%;
-		left: 36%;
+		left: 35%;
 	}
 
 	.number-season {
@@ -149,40 +145,23 @@
 	}
 
 	.number-character {
-		top: 71%;
+		top: 73%;
 		left: 9%;
 	}
 
 	.number-location {
 		top: 58%;
-		right: 13%;
-	}
-
-	.spark {
-		display: block;
-		width: clamp(1.4rem, 2.8vw, 2rem);
-		height: auto;
-	}
-
-	.spark-one {
-		top: 25%;
-		left: 51%;
-	}
-
-	.spark-two {
-		top: 52%;
-		right: 26%;
-	}
-
-	.spark-three {
-		top: 84%;
-		left: 33%;
+		right: 11%;
 	}
 
 	.mood-caption {
-		left: 13%;
-		top: 77%;
+		/* horizontally centered over the toggle capsule (the left flex child of
+		   the bottom bar), not the section. Its center sits left of the collage
+		   midpoint because the "Continue" button occupies the bar's right side. */
+		left: 29%;
+		top: 84%;
 		font-size: clamp(0.85rem, 1.7vw, 1.1rem);
+		transform: translateX(-50%);
 		white-space: nowrap;
 	}
 
@@ -219,8 +198,7 @@
 		}
 
 		.mood-number,
-		.mood-caption,
-		.spark {
+		.mood-caption {
 			display: none;
 		}
 	}

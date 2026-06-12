@@ -50,14 +50,14 @@
 
 	{#if preview}
 		<img src={preview} alt={label ?? ''} class="h-full w-full object-cover" />
-		<div class="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent"></div>
+		<div class="absolute inset-0 bg-linear-to-t from-ink/45 to-transparent"></div>
 		{#if label && showLabel}
 			<span class="absolute bottom-3 left-4 text-sm tracking-[0.15em] text-surface uppercase"
 				>{label}</span
 			>
 		{/if}
 		<span
-			class="absolute top-3 right-3 rounded-full bg-black/40 px-2.5 py-1 text-xs text-surface opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+			class="absolute top-3 right-3 rounded-full bg-ink/40 px-2.5 py-1 text-xs text-surface opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
 		>
 			Change
 		</span>

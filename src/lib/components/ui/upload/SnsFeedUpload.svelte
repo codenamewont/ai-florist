@@ -1,7 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import UploadTile from './UploadTile.svelte';
-	import flowerUrl from '$lib/assets/flower.svg';
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
@@ -10,7 +9,8 @@
 	let firstFile = $state(null);
 
 	$effect(() => {
-		primaryFile = firstFile ?? null;
+		const next = firstFile ?? null;
+		if (primaryFile !== next) primaryFile = next;
 	});
 
 	onMount(async () => {
@@ -32,8 +32,6 @@
 <div class="feed min-h-0 w-full flex-1">
 	<div class="sns-collage">
 		<span class="sns-number">(01)</span>
-		<img class="spark spark-one" src={flowerUrl} alt="" aria-hidden="true" />
-		<img class="spark spark-two" src={flowerUrl} alt="" aria-hidden="true" />
 		<span class="sns-caption">{caption}</span>
 
 		<UploadTile bind:file={firstFile} class="sns-tile" />
@@ -69,12 +67,11 @@
 	}
 
 	.sns-number,
-	.sns-caption,
-	.spark {
+	.sns-caption {
 		position: absolute;
 		z-index: 2;
 		pointer-events: none;
-		color: #111;
+		color: var(--color-ink);
 	}
 
 	.sns-number {
@@ -82,22 +79,6 @@
 		left: 23%;
 		font-size: clamp(1rem, 2.2vw, 1.5rem);
 		line-height: 1;
-	}
-
-	.spark {
-		display: block;
-		width: clamp(1.4rem, 2.8vw, 2rem);
-		height: auto;
-	}
-
-	.spark-one {
-		top: 64%;
-		left: 19%;
-	}
-
-	.spark-two {
-		top: 70%;
-		right: 19%;
 	}
 
 	.sns-caption {
@@ -130,8 +111,7 @@
 		}
 
 		.sns-number,
-		.sns-caption,
-		.spark {
+		.sns-caption {
 			display: none;
 		}
 	}
