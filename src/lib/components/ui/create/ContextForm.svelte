@@ -6,7 +6,7 @@
 		who = $bindable(null),
 		whatFor = $bindable(null),
 		style = $bindable(null),
-		budget = $bindable(50_000)
+		budget = $bindable(50000)
 	} = $props();
 
 	const hasAnySelection = $derived(who !== null || whatFor !== null || style !== null);

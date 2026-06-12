@@ -11,7 +11,6 @@
 	let selectedImage = $state(null);
 	let floristNote = $state('');
 	let recipe = $state(null);
-	let selectedSize = $state('');
 	let mock = $state(false);
 
 	onMount(async () => {
@@ -24,10 +23,9 @@
 
 		try {
 			const job = await fetchJob(jobId);
-			selectedImage = job.selectedSize ? job.images?.[job.selectedSize] : null;
+			selectedImage = job.images?.primary ?? null;
 			floristNote = job.floristNote ?? '';
 			recipe = job.recipe ?? null;
-			selectedSize = job.selectedSize ?? '';
 			mock = Boolean(job.mock);
 			loading = false;
 		} catch (err) {
@@ -65,11 +63,6 @@
 				</div>
 
 				<div class="space-y-6">
-					<div>
-						<h2 class="mb-2 text-lg">Selected size</h2>
-						<p class="text-sm text-muted">{selectedSize || 'Not selected'}</p>
-					</div>
-
 					<div>
 						<h2 class="mb-2 text-lg">Florist note</h2>
 						<p class="text-sm leading-relaxed text-muted">{floristNote}</p>

@@ -88,7 +88,7 @@
 			return;
 		}
 
-		await goto(resolve('/options'));
+		await goto(resolve('/edit'));
 	}
 </script>
 
@@ -121,9 +121,9 @@
 						disabled={skipping}
 						onclick={skipWithDummyImages}
 						class="w-full rounded border border-dashed border-subtle/60 px-4 py-2.5 text-xs text-muted hover:border-subtle hover:text-ink disabled:opacity-50"
-						title="AI 생성 없이 더미 이미지로 options로 이동 (개발용)"
+						title="AI 생성 없이 더미 이미지로 edit로 이동 (개발용)"
 					>
-						{skipping ? 'Skipping…' : 'Dev: Skip to options (dummy images)'}
+						{skipping ? 'Skipping…' : 'Dev: Skip to edit (dummy images)'}
 					</button>
 				{/if}
 				<button

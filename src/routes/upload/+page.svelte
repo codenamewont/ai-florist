@@ -60,7 +60,6 @@
 				imagePrompt: null,
 				images: null,
 				imagesJobId: null,
-				selectedSize: null,
 				floristNote: null,
 				mock: result.mock
 			});

@@ -4,7 +4,6 @@ import {
 	throwSupabaseError
 } from '$lib/server/supabase.js';
 
-/** @typedef {import('./jobStore.js').BouquetSize} BouquetSize */
 /** @typedef {import('./jobStore.js').GeneratedImage} GeneratedImage */
 
 const EXTENSION_BY_MIME = {
@@ -21,11 +20,11 @@ function extensionForMime(mimeType) {
 
 /**
  * @param {string} jobId
- * @param {BouquetSize} size
  * @param {GeneratedImage} image
+ * @param {string} [revision='primary']
  * @returns {Promise<GeneratedImage>}
  */
-export async function uploadGeneratedImage(jobId, size, image) {
+export async function uploadGeneratedImage(jobId, image, revision = 'primary') {
 	if (!image.base64) {
 		return image;
 	}
@@ -33,7 +32,7 @@ export async function uploadGeneratedImage(jobId, size, image) {
 	const supabase = getSupabaseClient();
 	const bucket = getSupabaseStorageBucket();
 	const mimeType = image.mimeType || 'image/png';
-	const path = `${jobId}/${size.toLowerCase()}.${extensionForMime(mimeType)}`;
+	const path = `${jobId}/${revision}.${extensionForMime(mimeType)}`;
 	const bytes = Buffer.from(image.base64, 'base64');
 
 	const { error } = await supabase.storage.from(bucket).upload(path, bytes, {
@@ -56,20 +55,12 @@ export async function uploadGeneratedImage(jobId, size, image) {
 
 /**
  * @param {string} jobId
- * @param {Partial<Record<BouquetSize, GeneratedImage>>} images
- * @returns {Promise<Partial<Record<BouquetSize, GeneratedImage>>>}
+ * @param {GeneratedImage} image
+ * @param {string} [revision]
+ * @returns {Promise<{ primary: GeneratedImage }>}
  */
-export async function uploadGeneratedImages(jobId, images) {
-	/** @type {Partial<Record<BouquetSize, GeneratedImage>>} */
-	const uploaded = {};
-	const sizes = /** @type {BouquetSize[]} */ (['S', 'M', 'L']);
-
-	for (const size of sizes) {
-		const image = images[size];
-		if (image) {
-			uploaded[size] = await uploadGeneratedImage(jobId, size, image);
-		}
-	}
-
-	return uploaded;
+export async function uploadGeneratedImages(jobId, image, revision) {
+	return {
+		primary: await uploadGeneratedImage(jobId, image, revision)
+	};
 }

@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { getSupabaseClient, throwSupabaseError } from '$lib/server/supabase.js';
 
-/** @typedef {'S' | 'M' | 'L'} BouquetSize */
-
 /**
  * @typedef {Object} UserInput
  * @property {string} [relationship]
@@ -50,8 +48,7 @@ import { getSupabaseClient, throwSupabaseError } from '$lib/server/supabase.js';
  * @property {MoodAnalysis | null} moodAnalysis
  * @property {BouquetRecipe | null} recipe
  * @property {string | null} imagePrompt
- * @property {Partial<Record<BouquetSize, GeneratedImage>>} images
- * @property {BouquetSize | null} selectedSize
+ * @property {{ primary?: GeneratedImage }} images
  * @property {string | null} floristNote
  */
 
@@ -68,7 +65,6 @@ function fromRow(row) {
 		recipe: row.recipe ?? null,
 		imagePrompt: row.image_prompt ?? null,
 		images: row.images ?? {},
-		selectedSize: row.selected_size ?? null,
 		floristNote: row.florist_note ?? null
 	};
 }
@@ -85,7 +81,6 @@ function toRowPatch(patch) {
 	if ('recipe' in patch) row.recipe = patch.recipe;
 	if ('imagePrompt' in patch) row.image_prompt = patch.imagePrompt;
 	if ('images' in patch) row.images = patch.images ?? {};
-	if ('selectedSize' in patch) row.selected_size = patch.selectedSize;
 	if ('floristNote' in patch) row.florist_note = patch.floristNote;
 
 	return row;
@@ -105,7 +100,6 @@ export async function createJob(userInput = {}) {
 		recipe: null,
 		imagePrompt: null,
 		images: {},
-		selectedSize: null,
 		floristNote: null
 	};
 

@@ -6,7 +6,7 @@ import {
 	mockRecipe
 } from '$lib/server/gemini/mock.js';
 import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
-import { loadDevBouquetImages } from './loadFixtureImages.js';
+import { loadDevBouquetImage } from './loadFixtureImages.js';
 
 /** @typedef {'options' | 'result'} DevSeedStage */
 
@@ -22,13 +22,13 @@ export async function seedDevJob(userInput, stage = 'result') {
 	const floristNote = stage === 'result' ? mockFloristNote(recipe) : null;
 
 	const job = await createJob(userInput);
-	const images = await uploadGeneratedImages(job.id, loadDevBouquetImages());
+	const images = await uploadGeneratedImages(job.id, loadDevBouquetImage(), `dev-${Date.now()}`);
 	await updateJob(job.id, {
 		moodAnalysis,
 		recipe,
 		imagePrompt,
 		images,
-		...(stage === 'result' ? { selectedSize: 'M', floristNote } : {})
+		...(stage === 'result' ? { floristNote } : {})
 	});
 
 	return {
@@ -37,7 +37,6 @@ export async function seedDevJob(userInput, stage = 'result') {
 		recipe,
 		imagePrompt,
 		images,
-		selectedSize: stage === 'result' ? 'M' : null,
 		floristNote,
 		mock: true
 	};

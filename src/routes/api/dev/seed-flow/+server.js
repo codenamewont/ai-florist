@@ -43,7 +43,7 @@ export async function POST({ request }) {
 				moodboard: DEV_MOODBOARD_UPLOAD,
 				sns: DEV_SNS_UPLOAD
 			},
-			...(stage === 'result' ? { selectedSize: 'M', floristNote: seeded.floristNote } : {})
+			...(stage === 'result' ? { floristNote: seeded.floristNote } : {})
 		},
 		// create 폼 초기값 참고용 (relationship/occasion/style/budget만)
 		formDefaults: DEV_USER_INPUT

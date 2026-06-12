@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
 import { json } from '@sveltejs/kit';
-import { loadDevBouquetImages } from '$lib/server/dev/loadFixtureImages.js';
+import { loadDevBouquetImage } from '$lib/server/dev/loadFixtureImages.js';
 import { requireJob, updateJob } from '$lib/server/flowerFlow/jobStore.js';
 import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
 import { mockImagePrompt, mockMoodAnalysis, mockRecipe } from '$lib/server/gemini/mock.js';
@@ -24,7 +24,11 @@ export async function POST({ request }) {
 		const moodAnalysis = job.moodAnalysis ?? mockMoodAnalysis();
 		const recipe = job.recipe ?? mockRecipe(job.userInput);
 		const imagePrompt = job.imagePrompt ?? mockImagePrompt(recipe);
-		const images = await uploadGeneratedImages(jobId, loadDevBouquetImages());
+		const images = await uploadGeneratedImages(
+			jobId,
+			loadDevBouquetImage(),
+			`dev-skip-${Date.now()}`
+		);
 
 		await updateJob(jobId, { moodAnalysis, recipe, imagePrompt, images });
 
