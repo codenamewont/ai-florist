@@ -2,6 +2,7 @@ import { dev } from '$app/environment';
 import { json } from '@sveltejs/kit';
 import { loadDevBouquetImages } from '$lib/server/dev/loadFixtureImages.js';
 import { requireJob, updateJob } from '$lib/server/flowerFlow/jobStore.js';
+import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
 import { mockImagePrompt, mockMoodAnalysis, mockRecipe } from '$lib/server/gemini/mock.js';
 import { readJsonBody } from '$lib/server/http.js';
 
@@ -19,13 +20,13 @@ export async function POST({ request }) {
 			return json({ error: 'jobId is required' }, 400);
 		}
 
-		const job = requireJob(jobId);
+		const job = await requireJob(jobId);
 		const moodAnalysis = job.moodAnalysis ?? mockMoodAnalysis();
 		const recipe = job.recipe ?? mockRecipe(job.userInput);
 		const imagePrompt = job.imagePrompt ?? mockImagePrompt(recipe);
-		const images = loadDevBouquetImages();
+		const images = await uploadGeneratedImages(jobId, loadDevBouquetImages());
 
-		updateJob(jobId, { moodAnalysis, recipe, imagePrompt, images });
+		await updateJob(jobId, { moodAnalysis, recipe, imagePrompt, images });
 
 		return json({
 			jobId,

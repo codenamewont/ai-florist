@@ -1,10 +1,6 @@
 import { dev } from '$app/environment';
 import { json } from '@sveltejs/kit';
-import {
-	DEV_CARD_MESSAGE,
-	DEV_USER_INPUT,
-	DEV_USER_INPUT_WITH_NOTES
-} from '$lib/dev/fixtures.js';
+import { DEV_CARD_MESSAGE, DEV_USER_INPUT, DEV_USER_INPUT_WITH_NOTES } from '$lib/dev/fixtures.js';
 import { DEV_MOODBOARD_UPLOAD, DEV_SNS_UPLOAD } from '$lib/dev/uploadFixtures.js';
 import { seedDevJob } from '$lib/server/dev/seedJob.js';
 
@@ -24,7 +20,7 @@ export async function POST({ request }) {
 		// 기본값 사용
 	}
 
-	const seeded = seedDevJob(DEV_USER_INPUT_WITH_NOTES, stage);
+	const seeded = await seedDevJob(DEV_USER_INPUT_WITH_NOTES, stage);
 
 	return json({
 		stage,
@@ -47,9 +43,7 @@ export async function POST({ request }) {
 				moodboard: DEV_MOODBOARD_UPLOAD,
 				sns: DEV_SNS_UPLOAD
 			},
-			...(stage === 'result'
-				? { selectedSize: 'M', floristNote: seeded.floristNote }
-				: {})
+			...(stage === 'result' ? { selectedSize: 'M', floristNote: seeded.floristNote } : {})
 		},
 		// create 폼 초기값 참고용 (relationship/occasion/style/budget만)
 		formDefaults: DEV_USER_INPUT

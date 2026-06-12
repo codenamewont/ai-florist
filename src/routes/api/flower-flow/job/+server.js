@@ -11,7 +11,7 @@ export async function GET({ url }) {
 			return json({ error: 'jobId is required' }, 400);
 		}
 
-		const job = requireJob(jobId);
+		const job = await requireJob(jobId);
 
 		return json({
 			jobId: job.id,

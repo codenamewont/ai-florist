@@ -5,6 +5,7 @@ import {
 	getImageProvider,
 	isImageGenerationConfigured
 } from '$lib/server/gemini/image.js';
+import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
 import { json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
 
 /**
@@ -29,8 +30,9 @@ function generateForJob(jobId, recipe) {
 
 	const task = (async () => {
 		const imagePrompt = await buildImagePrompt(recipe);
-		const images = await generateAllSizeImages(imagePrompt);
-		updateJob(jobId, { imagePrompt, images });
+		const generatedImages = await generateAllSizeImages(imagePrompt);
+		const images = await uploadGeneratedImages(jobId, generatedImages);
+		await updateJob(jobId, { imagePrompt, images });
 		return { imagePrompt, images };
 	})().finally(() => {
 		inFlight.delete(jobId);
@@ -50,7 +52,7 @@ export async function POST({ request }) {
 			return json({ error: 'jobId is required', code: 'bad_request' }, 400);
 		}
 
-		const job = requireJob(jobId);
+		const job = await requireJob(jobId);
 
 		if (!job.recipe) {
 			return json({ error: 'recipe is missing. Run recipe first.', code: 'bad_request' }, 400);

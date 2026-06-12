@@ -13,21 +13,21 @@ export async function POST({ request }) {
 			return json({ error: 'jobId is required' }, 400);
 		}
 
-		const job = requireJob(jobId);
+		const job = await requireJob(jobId);
 
 		if (!job.moodAnalysis) {
 			return json({ error: 'moodAnalysis is missing. Run mood-analysis first.' }, 400);
 		}
 
 		if (body.userInput && typeof body.userInput === 'object') {
-			updateJob(jobId, {
+			await updateJob(jobId, {
 				userInput: { ...job.userInput, .../** @type {Record<string, unknown>} */ (body.userInput) }
 			});
 		}
 
-		const currentJob = requireJob(jobId);
+		const currentJob = await requireJob(jobId);
 		const recipe = await buildBouquetRecipe(currentJob.moodAnalysis, currentJob.userInput);
-		updateJob(jobId, { recipe });
+		await updateJob(jobId, { recipe });
 
 		return json({
 			jobId,
