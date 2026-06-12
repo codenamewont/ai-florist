@@ -160,8 +160,50 @@ function moodMatchWeight(flower) {
 }
 
 /**
+ * @typedef {Object} FlowerCandidate
+ * @property {string} name
+ * @property {'main' | 'filler' | 'line' | 'foliage'} role
+ * @property {'low' | 'medium' | 'high'} priceLevel
+ * @property {'common' | 'limited' | 'rare'} cutAvailability
+ * @property {string} wordOfFlower
+ * @property {string[]} colors
+ * @property {string[]} mood
+ * @property {string} [family]
+ * @property {number} matchScore
+ */
+
+/**
+ * @typedef {Object} MoodFlowerCandidates
+ * @property {string[]} colors
+ * @property {FlowerCandidate[]} main
+ * @property {FlowerCandidate[]} filler
+ * @property {FlowerCandidate[]} line
+ * @property {FlowerCandidate[]} foliage
+ */
+
+/**
+ * @param {FlowerRecord} flower
+ * @param {number} score
+ * @returns {FlowerCandidate}
+ */
+function toCandidate(flower, score) {
+	return {
+		name: flower.name,
+		role: flower.role,
+		priceLevel: flower.priceLevel,
+		cutAvailability: flower.cutAvailability ?? 'common',
+		wordOfFlower: flower.wordOfFlower,
+		colors: flower.colors,
+		mood: flower.mood,
+		...(flower.family ? { family: flower.family } : {}),
+		matchScore: score
+	};
+}
+
+/**
  * @param {MoodAnalysis} mood
  * @param {string} [season]
+ * @returns {MoodFlowerCandidates}
  */
 export function matchFlowersFromMood(mood, season) {
 	const palette = mood.colorPalette.map((c) => c.toLowerCase());
@@ -224,17 +266,22 @@ export function matchFlowersFromMood(mood, season) {
 	};
 
 	const mains = pickUnique(ranked, (flower) => flower.role === 'main', 4);
-	const subs = pickUnique(
+	const accents = pickUnique(
 		ranked,
 		(flower) => flower.role === 'filler' || flower.role === 'line',
 		5
 	);
-	const greenery = pickUnique(ranked, (flower) => flower.role === 'foliage', 2);
+	const foliage = pickUnique(ranked, (flower) => flower.role === 'foliage', 2);
 
 	return {
-		mainFlowers: mains.map(({ flower }) => flower.name),
-		subFlowers: subs.map(({ flower }) => flower.name),
-		greenery: greenery.map(({ flower }) => flower.name),
-		colors: mood.colorPalette.slice(0, 3)
+		colors: mood.colorPalette.slice(0, 3),
+		main: mains.map(({ flower, score }) => toCandidate(flower, score)),
+		filler: accents
+			.filter(({ flower }) => flower.role === 'filler')
+			.map(({ flower, score }) => toCandidate(flower, score)),
+		line: accents
+			.filter(({ flower }) => flower.role === 'line')
+			.map(({ flower, score }) => toCandidate(flower, score)),
+		foliage: foliage.map(({ flower, score }) => toCandidate(flower, score))
 	};
 }

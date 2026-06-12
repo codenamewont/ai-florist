@@ -23,10 +23,16 @@ export async function buildBouquetRecipe(mood, userInput = {}) {
 
 	const model = getTextModel();
 	const prompt = `You are a professional florist assistant.
-Create a realistic bouquet recipe using ONLY real flowers from this candidate list.
+Create a realistic Korean florist bouquet recipe using ONLY the pre-scored candidate flowers below.
 
-Candidate mapping:
+Candidate flowers (grouped by floral role; higher matchScore = stronger mood fit):
 ${JSON.stringify(mapped, null, 2)}
+
+Role guide:
+- main: focal blooms — choose 1-2 for mainFlowers
+- filler: volume and softness — choose 1-2 for subFlowers
+- line: height, rhythm, branches — choose 0-1 for subFlowers
+- foliage: greenery and texture — choose 1-2 for greenery
 
 Mood analysis:
 ${JSON.stringify(mood, null, 2)}
@@ -47,7 +53,14 @@ Return JSON only:
 }
 
 Rules:
-- Do not invent fantasy flowers.
+- Use ONLY exact candidate names from the lists above. Do not invent, rename, or substitute flowers.
+- mainFlowers must come from candidates.main only (1-2 items).
+- subFlowers must combine candidates.filler and/or candidates.line only (2-4 items total).
+- greenery must come from candidates.foliage only (1-2 items).
+- Prefer cutAvailability "common" for mainFlowers. Use "limited" as accent at most. Avoid "rare" unless no common main fits the mood.
+- Respect priceLevel against budget: favor low/medium for tighter budgets; high-price blooms sparingly.
+- Do not place two flowers with the same family field in one recipe.
+- Draw palette from candidate colors and mood analysis; suggested colors: ${mapped.colors.join(', ')}.
 - Keep the bouquet orderable from a real florist in Korea.
 - Budget should be ${budget}.`;
 
@@ -71,7 +84,8 @@ Use this recipe:
 ${JSON.stringify(recipe, null, 2)}
 
 Rules:
-- Real flowers only
+- Real flowers only — use the exact flower names from the recipe
+- mainFlowers are the focal blooms; subFlowers add volume and line; greenery frames the bouquet
 - No fantasy colors or surreal shapes
 - White background, soft natural lighting
 - Korean florist style
@@ -99,6 +113,7 @@ Use this bouquet recipe:
 ${JSON.stringify(recipe, null, 2)}
 
 Tone: warm, professional, specific.
+Mention why the main, accent, and greenery choices work together as one cohesive bouquet.
 Return plain text only.`;
 
 	const result = await model.generateContent(prompt);
