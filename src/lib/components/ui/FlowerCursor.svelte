@@ -51,7 +51,7 @@
 		left: 0;
 		z-index: 2147483647;
 		pointer-events: none;
-		translate: -50% -50%;
+		translate: -0.3rem -0.3rem;
 	}
 
 	.flower-cursor-icon {
