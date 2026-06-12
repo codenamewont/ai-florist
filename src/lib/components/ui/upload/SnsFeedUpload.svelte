@@ -4,13 +4,13 @@
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
-	let { primaryFile = $bindable(null) } = $props();
+	let { primaryFile = $bindable(null), caption = 'upload their feed!' } = $props();
 
 	let firstFile = $state(null);
-	let secondFile = $state(null);
 
 	$effect(() => {
-		primaryFile = firstFile ?? secondFile ?? null;
+		const next = firstFile ?? null;
+		if (primaryFile !== next) primaryFile = next;
 	});
 
 	onMount(async () => {
@@ -23,7 +23,6 @@
 		try {
 			const files = await hydrateDevUpload(/** @type {Record<string, string>} */ (tiles));
 			if (files.first) firstFile = files.first;
-			if (files.second) secondFile = files.second;
 		} catch {
 			// dev seed 실패 시 빈 타일 유지
 		}
@@ -31,45 +30,89 @@
 </script>
 
 <div class="feed min-h-0 w-full flex-1">
-	<UploadTile
-		bind:file={firstFile}
-		class="tile-one aspect-4/5 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
-	/>
-	<UploadTile
-		bind:file={secondFile}
-		class="tile-two aspect-4/5 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
-	/>
+	<div class="sns-collage">
+		<span class="sns-number">(01)</span>
+		<span class="sns-caption">{caption}</span>
+
+		<UploadTile bind:file={firstFile} class="sns-tile" />
+	</div>
 </div>
 
 <style>
 	.feed {
-		display: grid;
-		gap: 0;
-		grid-template-columns: 1fr 1fr;
-		grid-template-rows: 1fr;
-		width: 100%;
-		flex: 1;
-		min-height: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		padding: 0.5rem 1.5rem 1rem;
 	}
 
-	@media (min-width: 1024px) {
+	.sns-collage {
+		position: relative;
+		width: min(100%, 42rem);
+		height: 100%;
+		aspect-ratio: 4 / 5;
+		max-height: 34rem;
+	}
+
+	.feed :global(.sns-tile) {
+		position: absolute;
+		top: 12%;
+		left: 50%;
+		width: 58%;
+		height: 46%;
+		background: #fff;
+		box-shadow: 0 10px 24px rgb(56 50 47 / 0.08);
+		transform: translateX(-50%);
+	}
+
+	.sns-number,
+	.sns-caption {
+		position: absolute;
+		z-index: 2;
+		pointer-events: none;
+		color: var(--color-ink);
+	}
+
+	.sns-number {
+		top: 6%;
+		left: 23%;
+		font-size: clamp(1rem, 2.2vw, 1.5rem);
+		line-height: 1;
+	}
+
+	.sns-caption {
+		left: 50%;
+		bottom: 13%;
+		font-size: clamp(0.9rem, 1.9vw, 1.25rem);
+		transform: translateX(-50%);
+		white-space: nowrap;
+	}
+
+	@media (max-width: 767px) {
 		.feed {
-			grid-template-rows: repeat(5, 1fr);
-			grid-template-areas:
-				'.   two'
-				'one two'
-				'one two'
-				'one two'
-				'one .';
-			min-height: 34rem;
+			align-items: flex-start;
+			padding: 1.5rem 1rem 7rem;
 		}
 
-		:global(.tile-one) {
-			grid-area: one;
+		.sns-collage {
+			width: 100%;
+			aspect-ratio: auto;
+			min-height: 0;
 		}
 
-		:global(.tile-two) {
-			grid-area: two;
+		.feed :global(.sns-tile) {
+			position: relative;
+			inset: auto;
+			width: 100%;
+			height: auto;
+			aspect-ratio: 4 / 5;
+			transform: none;
+		}
+
+		.sns-number,
+		.sns-caption {
+			display: none;
 		}
 	}
 </style>

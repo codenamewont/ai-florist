@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import DescriptionCard from '$lib/components/ui/Artwork/DescriptionCard.svelte';
 	import Header from '$lib/components/ui/Header.svelte';
 	import { editImages, fetchJob, finalizeJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { getFlowString, saveFlow } from '$lib/flowerFlow/session.js';
@@ -182,7 +183,7 @@
 		<section
 			class="flex min-h-0 w-full shrink-0 flex-col border-b border-line px-6 py-6 lg:w-[44%] lg:border-r lg:border-b-0 lg:px-10 lg:py-8"
 		>
-			<div class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-col justify-center gap-6">
+			<div class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-col items-center justify-center gap-6">
 				<div class="overflow-hidden bg-track shadow-sm ring-1 ring-black/5">
 					{#if loading}
 						<div class="aspect-[4/5] w-full animate-pulse bg-placeholder"></div>
@@ -193,10 +194,7 @@
 					{/if}
 				</div>
 
-				<div class="border border-line-strong bg-surface px-5 py-4">
-					<h1 class="text-sm">{title}</h1>
-					<p class="mt-2 text-xs leading-relaxed text-muted">{description}</p>
-				</div>
+				<DescriptionCard {title} {description} />
 			</div>
 		</section>
 
