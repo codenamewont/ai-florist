@@ -21,7 +21,7 @@ export async function POST({ request }) {
 			return json({ error: 'size must be one of S, M, or L' }, 400);
 		}
 
-		const job = requireJob(jobId);
+		const job = await requireJob(jobId);
 		const selectedImage = job.images?.[/** @type {'S'|'M'|'L'} */ (size)];
 
 		if (!selectedImage) {
@@ -30,7 +30,7 @@ export async function POST({ request }) {
 
 		const floristNote = job.recipe ? await buildFloristNote(job.recipe) : null;
 
-		updateJob(jobId, {
+		await updateJob(jobId, {
 			selectedSize: /** @type {'S'|'M'|'L'} */ (size),
 			floristNote
 		});

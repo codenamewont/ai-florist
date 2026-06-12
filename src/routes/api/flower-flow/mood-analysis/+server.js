@@ -14,11 +14,11 @@ export async function POST({ request }) {
 		}
 
 		const userInput = readUserInput(formData);
-		const job = createJob(userInput);
+		const job = await createJob(userInput);
 		const imageBytes = new Uint8Array(await image.arrayBuffer());
 		const moodAnalysis = await analyzeImageMood(imageBytes, image.type || 'image/jpeg', userInput);
 
-		updateJob(job.id, { moodAnalysis });
+		await updateJob(job.id, { moodAnalysis });
 
 		return json({
 			jobId: job.id,

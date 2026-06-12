@@ -5,6 +5,7 @@ import {
 	mockMoodAnalysis,
 	mockRecipe
 } from '$lib/server/gemini/mock.js';
+import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
 import { loadDevBouquetImages } from './loadFixtureImages.js';
 
 /** @typedef {'options' | 'result'} DevSeedStage */
@@ -14,15 +15,15 @@ import { loadDevBouquetImages } from './loadFixtureImages.js';
  * @param {Record<string, unknown>} userInput
  * @param {DevSeedStage} [stage='result']
  */
-export function seedDevJob(userInput, stage = 'result') {
+export async function seedDevJob(userInput, stage = 'result') {
 	const moodAnalysis = mockMoodAnalysis();
 	const recipe = mockRecipe(userInput);
 	const imagePrompt = mockImagePrompt(recipe);
-	const images = loadDevBouquetImages();
 	const floristNote = stage === 'result' ? mockFloristNote(recipe) : null;
 
-	const job = createJob(userInput);
-	updateJob(job.id, {
+	const job = await createJob(userInput);
+	const images = await uploadGeneratedImages(job.id, loadDevBouquetImages());
+	await updateJob(job.id, {
 		moodAnalysis,
 		recipe,
 		imagePrompt,

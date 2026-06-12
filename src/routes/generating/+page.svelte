@@ -101,8 +101,8 @@
 			);
 			// Do NOT persist the multi-MB base64 images in sessionStorage — Safari caps
 			// it at ~5MB and throws "QuotaExceededError: The quota has been exceeded."
-			// The images already live server-side in the job; the options and result
-			// pages fetch them by jobId. We only keep lightweight metadata here.
+			// The images already live in Supabase Storage via the job; the options
+			// and result pages fetch them by jobId. We only keep lightweight metadata here.
 			saveFlow({
 				imagesJobId: jobId,
 				imagePrompt: imageResult.imagePrompt,
@@ -113,8 +113,7 @@
 		} catch (err) {
 			if (!active) return;
 
-			// The server lost this job (e.g. a dev-server restart wipes the in-memory
-			// job store). The stored jobId is dead, so retrying is pointless — clear
+			// The stored jobId no longer resolves, so retrying is pointless — clear
 			// the stale flow and send the user back to re-upload.
 			const code = err && typeof err === 'object' && 'code' in err ? err.code : '';
 			const stale =

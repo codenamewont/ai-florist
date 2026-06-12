@@ -6,9 +6,7 @@ import { describeAiError } from '$lib/server/aiError.js';
  */
 export function toErrorResponse(error) {
 	if (error instanceof JobNotFoundError) {
-		console.warn(
-			`[flower-flow] job_not_found (404) — ${error.message} (server restart wipes jobs)`
-		);
+		console.warn(`[flower-flow] job_not_found (404) — ${error.message}`);
 		return new Response(JSON.stringify({ error: error.message, code: 'job_not_found' }), {
 			status: 404,
 			headers: { 'Content-Type': 'application/json' }

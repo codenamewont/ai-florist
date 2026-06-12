@@ -107,9 +107,10 @@ export async function fetchJob(jobId) {
 }
 
 /**
- * @param {{ mimeType?: string, base64?: string } | null | undefined} image
+ * @param {{ mimeType?: string, base64?: string, url?: string } | null | undefined} image
  */
 export function toDataUrl(image) {
+	if (image?.url) return image.url;
 	if (!image?.base64) return '';
 	return `data:${image.mimeType || 'image/png'};base64,${image.base64}`;
 }
