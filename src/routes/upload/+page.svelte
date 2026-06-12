@@ -27,6 +27,13 @@
 	let loading = $state(false);
 	let error = $state('');
 
+	const recipientPronoun = $derived.by(() => {
+		const style = typeof userInput.style === 'string' ? userInput.style.toLowerCase() : '';
+		if (style === 'masculine') return 'his';
+		if (style === 'feminine') return 'her';
+		return 'their';
+	});
+
 	async function continueToMessage() {
 		error = '';
 
@@ -77,18 +84,20 @@
 >
 	<Header step={2} total={7} />
 
-	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
+	<main class="flex min-h-0 flex-1 flex-col pt-6 lg:flex-row lg:pt-8">
 		<Artwork />
 
-		<section class="relative flex min-h-0 flex-1 flex-col pb-[4.75rem] lg:overflow-hidden lg:pb-0">
+		<section
+			class="relative flex min-h-0 flex-1 flex-col pb-[4.75rem] lg:grid lg:grid-rows-[minmax(0,1fr)_auto] lg:overflow-hidden lg:pb-8"
+		>
 			{#if mode === 'moodboard'}
-				<MoodboardGrid bind:primaryFile />
+				<MoodboardGrid bind:primaryFile caption={`build ${recipientPronoun} moodboard!`} />
 			{:else}
-				<SnsFeedUpload bind:primaryFile />
+				<SnsFeedUpload bind:primaryFile caption={`upload ${recipientPronoun} feed!`} />
 			{/if}
 
 			<div
-				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 px-4 pb-5 lg:absolute lg:right-8 lg:bottom-8 lg:left-auto lg:w-72 lg:px-0 lg:pb-0"
+				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 px-4 pb-5 lg:static lg:mx-auto lg:flex lg:w-full lg:max-w-2xl lg:items-center lg:gap-3 lg:space-y-0 lg:px-6 lg:pb-0"
 			>
 				{#if error}
 					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
@@ -100,19 +109,19 @@
 					type="button"
 					disabled={loading}
 					onclick={continueToMessage}
-					class="w-full bg-pill px-4 py-3 text-sm text-surface disabled:opacity-50"
+					class="w-full px-2 py-3 text-sm whitespace-nowrap text-ink underline-offset-4 hover:underline disabled:opacity-50 lg:order-2 lg:w-auto"
 				>
-					{loading ? 'Analyzing mood...' : 'Continue to message'}
+					{loading ? 'Analyzing mood...' : 'Continue to message ->'}
 				</button>
 
 				<div
-					class="flex w-full items-center rounded-full bg-surface/95 p-1.5 shadow-xl ring-1 ring-black/5 backdrop-blur"
+					class="grid w-full grid-cols-2 items-center rounded-full bg-white p-1.5 shadow-xl ring-1 ring-black/5 lg:order-1 lg:flex-1"
 				>
 					<button
 						type="button"
 						onclick={() => (mode = 'sns')}
 						class={[
-							'flex-1 rounded-full px-4 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
+							'w-full rounded-full px-3 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
 							mode === 'sns' ? 'bg-pill text-surface' : 'text-muted hover:text-ink'
 						]}
 					>
@@ -122,7 +131,7 @@
 						type="button"
 						onclick={() => (mode = 'moodboard')}
 						class={[
-							'flex-1 rounded-full px-4 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
+							'w-full rounded-full px-3 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
 							mode === 'moodboard' ? 'bg-pill text-surface' : 'text-muted hover:text-ink'
 						]}
 					>

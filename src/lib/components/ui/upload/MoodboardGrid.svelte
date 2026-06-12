@@ -1,10 +1,11 @@
 <script>
 	import { onMount } from 'svelte';
 	import UploadTile from './UploadTile.svelte';
+	import flowerUrl from '$lib/assets/flower.svg';
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
-	let { primaryFile = $bindable(null) } = $props();
+	let { primaryFile = $bindable(null), caption = 'build their moodboard!' } = $props();
 
 	let colorFile = $state(null);
 	let seasonFile = $state(null);
@@ -35,65 +36,192 @@
 </script>
 
 <div class="moodboard min-h-0 w-full flex-1">
-	<UploadTile
-		label="Color"
-		bind:file={colorFile}
-		class="tile tile-color aspect-4/5 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
-	/>
-	<UploadTile
-		label="Season"
-		bind:file={seasonFile}
-		class="tile tile-season aspect-4/3 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
-	/>
-	<UploadTile
-		label="Character"
-		bind:file={characterFile}
-		class="tile tile-character aspect-4/3 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
-	/>
-	<UploadTile
-		label="Location"
-		bind:file={locationFile}
-		class="tile tile-location aspect-4/5 h-full min-h-0 w-full max-lg:aspect-auto lg:aspect-auto"
-	/>
+	<div class="collage">
+		<span class="mood-number number-color">(01)</span>
+		<span class="mood-number number-season">(02)</span>
+		<span class="mood-number number-character">(03)</span>
+		<span class="mood-number number-location">(04)</span>
+		<img class="spark spark-one" src={flowerUrl} alt="" aria-hidden="true" />
+		<img class="spark spark-two" src={flowerUrl} alt="" aria-hidden="true" />
+		<img class="spark spark-three" src={flowerUrl} alt="" aria-hidden="true" />
+		<span class="mood-caption">{caption}</span>
+
+		<UploadTile
+			label="Color"
+			bind:file={colorFile}
+			class="moodboard-tile tile-color"
+		/>
+		<UploadTile
+			label="Season"
+			bind:file={seasonFile}
+			class="moodboard-tile tile-season"
+		/>
+		<UploadTile
+			label="Character"
+			bind:file={characterFile}
+			class="moodboard-tile tile-character"
+		/>
+		<UploadTile
+			label="Location"
+			bind:file={locationFile}
+			class="moodboard-tile tile-location"
+		/>
+	</div>
 </div>
 
 <style>
 	.moodboard {
-		display: grid;
-		gap: 0;
-		grid-template-columns: 1fr 1fr;
-		grid-template-rows: 1fr 1fr;
-		width: 100%;
-		flex: 1;
-		min-height: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		padding: 0.5rem 1.5rem 1rem;
 	}
 
-	@media (min-width: 1024px) {
+	.collage {
+		position: relative;
+		width: min(100%, 32rem);
+		height: 100%;
+		aspect-ratio: 4 / 5.2;
+		max-height: 44rem;
+	}
+
+	.moodboard :global(.moodboard-tile) {
+		position: absolute;
+		background: #fff;
+		box-shadow: 0 10px 24px rgb(56 50 47 / 0.08);
+	}
+
+	/* 01 — top-left portrait */
+	:global(.tile-color) {
+		top: 8%;
+		left: 7%;
+		width: 30%;
+		aspect-ratio: 3 / 4;
+	}
+
+	/* 02 — right portrait, dips below the top of 01 */
+	:global(.tile-season) {
+		top: 13%;
+		right: 4%;
+		width: 29%;
+		aspect-ratio: 3 / 4;
+	}
+
+	/* 03 — landscape, lower-left */
+	:global(.tile-character) {
+		top: 49%;
+		left: 17%;
+		width: 36%;
+		aspect-ratio: 4 / 3;
+	}
+
+	/* 04 — bottom-right portrait */
+	:global(.tile-location) {
+		top: 62%;
+		right: 7%;
+		width: 29%;
+		aspect-ratio: 3 / 4;
+	}
+
+	.mood-number,
+	.mood-caption,
+	.spark {
+		position: absolute;
+		z-index: 2;
+		pointer-events: none;
+		color: #111;
+	}
+
+	.mood-number {
+		font-size: clamp(1rem, 2.2vw, 1.5rem);
+		line-height: 1;
+	}
+
+	.number-color {
+		top: 13%;
+		left: 36%;
+	}
+
+	.number-season {
+		top: 38%;
+		left: 60%;
+	}
+
+	.number-character {
+		top: 71%;
+		left: 9%;
+	}
+
+	.number-location {
+		top: 58%;
+		right: 13%;
+	}
+
+	.spark {
+		display: block;
+		width: clamp(1.4rem, 2.8vw, 2rem);
+		height: auto;
+	}
+
+	.spark-one {
+		top: 25%;
+		left: 51%;
+	}
+
+	.spark-two {
+		top: 52%;
+		right: 26%;
+	}
+
+	.spark-three {
+		top: 84%;
+		left: 33%;
+	}
+
+	.mood-caption {
+		left: 13%;
+		top: 77%;
+		font-size: clamp(0.85rem, 1.7vw, 1.1rem);
+		white-space: nowrap;
+	}
+
+	@media (max-width: 767px) {
 		.moodboard {
-			grid-template-rows: repeat(5, 1fr);
-			grid-template-areas:
-				'color     season'
-				'color     season'
-				'color     location'
-				'character location'
-				'character location';
-			min-height: 34rem;
+			align-items: flex-start;
+			padding: 1.5rem 1rem 7rem;
 		}
 
-		:global(.tile-color) {
-			grid-area: color;
+		.collage {
+			display: grid;
+			width: 100%;
+			aspect-ratio: auto;
+			min-height: 0;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1.25rem;
 		}
 
-		:global(.tile-season) {
-			grid-area: season;
+		.moodboard :global(.moodboard-tile) {
+			position: relative;
+			inset: auto;
+			width: 100%;
+			height: auto;
+		}
+
+		:global(.tile-color),
+		:global(.tile-season),
+		:global(.tile-location) {
+			aspect-ratio: 3 / 4;
 		}
 
 		:global(.tile-character) {
-			grid-area: character;
+			aspect-ratio: 4 / 3;
 		}
 
-		:global(.tile-location) {
-			grid-area: location;
+		.mood-number,
+		.mood-caption,
+		.spark {
+			display: none;
 		}
 	}
 </style>
