@@ -20,7 +20,6 @@ export async function GET({ url }) {
 			recipe: job.recipe,
 			imagePrompt: job.imagePrompt,
 			images: job.images,
-			selectedSize: job.selectedSize,
 			floristNote: job.floristNote,
 			mock: !isGeminiConfigured()
 		});

@@ -76,7 +76,7 @@ Rules:
 - White background, soft natural lighting
 - Korean florist style
 - Describe bouquet composition only (flower types, colors, wrapping, mood)
-- Do NOT specify bouquet size, stem count, or S/M/L — size variants are applied in a separate step
+- Do NOT specify alternate size variants — generate one final customer preview image
 - Return plain text only, no markdown`;
 
 	const result = await model.generateContent(prompt);

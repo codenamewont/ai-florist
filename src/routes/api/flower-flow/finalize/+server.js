@@ -3,41 +3,29 @@ import { buildFloristNote } from '$lib/server/gemini/text.js';
 import { isGeminiConfigured } from '$lib/server/gemini/client.js';
 import { json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
 
-/** @type {import('$lib/server/flowerFlow/jobStore.js').BouquetSize[]} */
-const VALID_SIZES = ['S', 'M', 'L'];
-
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request }) {
 	try {
 		const body = await readJsonBody(request);
 		const jobId = typeof body.jobId === 'string' ? body.jobId : '';
-		const size = typeof body.size === 'string' ? body.size : '';
 
 		if (!jobId) {
 			return json({ error: 'jobId is required' }, 400);
 		}
 
-		if (!VALID_SIZES.includes(size)) {
-			return json({ error: 'size must be one of S, M, or L' }, 400);
-		}
-
 		const job = await requireJob(jobId);
-		const selectedImage = job.images?.[/** @type {'S'|'M'|'L'} */ (size)];
+		const selectedImage = job.images?.primary;
 
 		if (!selectedImage) {
-			return json({ error: 'selected size image is missing. Run generate-images first.' }, 400);
+			return json({ error: 'generated image is missing. Run generate-images first.' }, 400);
 		}
 
 		const floristNote = job.recipe ? await buildFloristNote(job.recipe) : null;
 
-		await updateJob(jobId, {
-			selectedSize: /** @type {'S'|'M'|'L'} */ (size),
-			floristNote
-		});
+		await updateJob(jobId, { floristNote });
 
 		return json({
 			jobId,
-			selectedSize: size,
 			selectedImage,
 			floristNote,
 			recipe: job.recipe,

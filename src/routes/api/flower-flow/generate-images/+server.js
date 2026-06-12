@@ -1,7 +1,7 @@
 import { requireJob, updateJob } from '$lib/server/flowerFlow/jobStore.js';
 import { buildImagePrompt } from '$lib/server/gemini/text.js';
 import {
-	generateAllSizeImages,
+	generateBouquetImage,
 	getImageProvider,
 	isImageGenerationConfigured
 } from '$lib/server/gemini/image.js';
@@ -19,7 +19,7 @@ function isMockImage(image) {
  * Dedupe concurrent generation for the same job. Without this, a remount or
  * double-navigation can fire several generate-images requests at once, which is
  * a common way to *cause* the very rate limits this page then keeps retrying.
- * @type {Map<string, Promise<{ imagePrompt: string, images: Partial<Record<import('$lib/server/flowerFlow/jobStore.js').BouquetSize, import('$lib/server/flowerFlow/jobStore.js').GeneratedImage>> }>>}
+ * @type {Map<string, Promise<{ imagePrompt: string, images: { primary: import('$lib/server/flowerFlow/jobStore.js').GeneratedImage } }>>}
  */
 const inFlight = new Map();
 
@@ -30,8 +30,8 @@ function generateForJob(jobId, recipe) {
 
 	const task = (async () => {
 		const imagePrompt = await buildImagePrompt(recipe);
-		const generatedImages = await generateAllSizeImages(imagePrompt);
-		const images = await uploadGeneratedImages(jobId, generatedImages);
+		const generatedImage = await generateBouquetImage(imagePrompt);
+		const images = await uploadGeneratedImages(jobId, generatedImage, `initial-${Date.now()}`);
 		await updateJob(jobId, { imagePrompt, images });
 		return { imagePrompt, images };
 	})().finally(() => {
@@ -58,7 +58,7 @@ export async function POST({ request }) {
 			return json({ error: 'recipe is missing. Run recipe first.', code: 'bad_request' }, 400);
 		}
 
-		if (job.images?.M && !isMockImage(job.images.M)) {
+		if (job.images?.primary && !isMockImage(job.images.primary)) {
 			console.log(
 				`[flower-flow] generate-images job=${jobId.slice(0, 8)} cached (already generated)`
 			);

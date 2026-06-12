@@ -88,13 +88,24 @@ export async function generateImages(jobId) {
 
 /**
  * @param {string} jobId
- * @param {'S' | 'M' | 'L'} size
+ * @param {{ mode: string, prompt: string, selection: Array<{ x: number, y: number }> }} editInstruction
  */
-export async function selectOption(jobId, size) {
-	const response = await fetch('/api/flower-flow/select-option', {
+export async function editImages(jobId, editInstruction) {
+	const response = await fetch('/api/flower-flow/edit-images', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ jobId, size })
+		body: JSON.stringify({ jobId, ...editInstruction })
+	});
+
+	return parseResponse(response);
+}
+
+/** @param {string} jobId */
+export async function finalizeJob(jobId) {
+	const response = await fetch('/api/flower-flow/finalize', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ jobId })
 	});
 
 	return parseResponse(response);

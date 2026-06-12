@@ -2,7 +2,6 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { mockGeneratedImage } from '$lib/server/gemini/mock.js';
 
-/** @typedef {import('../flowerFlow/jobStore.js').BouquetSize} BouquetSize */
 /** @typedef {import('../flowerFlow/jobStore.js').GeneratedImage} GeneratedImage */
 
 const MIME_BY_EXT = {
@@ -14,34 +13,27 @@ const MIME_BY_EXT = {
 };
 
 /**
- * static/dev/bouquet-{size}.{jpg|png|svg} 를 읽습니다.
+ * static/dev/bouquet.{jpg|png|svg} 또는 기존 bouquet-m 파일을 읽습니다.
  * 파일이 없으면 mock SVG로 대체합니다.
- * @param {BouquetSize} size
  * @returns {GeneratedImage}
  */
-function loadFixtureImage(size) {
+export function loadDevBouquetImage() {
 	const baseDir = join(process.cwd(), 'static', 'dev');
 	const extensions = ['.jpg', '.jpeg', '.png', '.webp', '.svg'];
+	const names = ['bouquet', 'bouquet-m'];
 
-	for (const ext of extensions) {
-		const filePath = join(baseDir, `bouquet-${size.toLowerCase()}${ext}`);
-		if (!existsSync(filePath)) continue;
+	for (const name of names) {
+		for (const ext of extensions) {
+			const filePath = join(baseDir, `${name}${ext}`);
+			if (!existsSync(filePath)) continue;
 
-		const mimeType = MIME_BY_EXT[ext] ?? 'application/octet-stream';
-		return {
-			mimeType,
-			base64: readFileSync(filePath).toString('base64')
-		};
+			const mimeType = MIME_BY_EXT[ext] ?? 'application/octet-stream';
+			return {
+				mimeType,
+				base64: readFileSync(filePath).toString('base64')
+			};
+		}
 	}
 
-	return mockGeneratedImage(size);
-}
-
-/** @returns {Partial<Record<BouquetSize, GeneratedImage>>} */
-export function loadDevBouquetImages() {
-	return {
-		S: loadFixtureImage('S'),
-		M: loadFixtureImage('M'),
-		L: loadFixtureImage('L')
-	};
+	return mockGeneratedImage();
 }

@@ -29,11 +29,8 @@
 
 	const artworkTitle = $derived(selectedShopId ? 'Ready to order' : 'Your bouquet');
 
-	const artworkDescription = $derived(
-		floristNote || 'Your selected bouquet design.'
-	);
+	const artworkDescription = $derived(floristNote || 'Your selected bouquet design.');
 
-	// options Continue(최종 사이즈 확정) 이후 selectedSize가 있을 때만 이미지 표시
 	const bouquetImageSrc = $derived(selectedImage ? toDataUrl(selectedImage) : null);
 
 	/**
@@ -78,8 +75,7 @@
 		try {
 			const job = await fetchJob(jobId);
 			floristNote = job.floristNote ?? '';
-			// options에서 S/M/L 선택 후 Continue 한 경우에만 job.selectedSize 존재
-			selectedImage = job.selectedSize ? (job.images?.[job.selectedSize] ?? null) : null;
+			selectedImage = job.images?.primary ?? null;
 
 			const order = buildFloristOrderMessage({
 				userInput: { ...sessionUserInput, ...job.userInput },

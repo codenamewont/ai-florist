@@ -109,7 +109,7 @@
 				mock: imageResult.mock
 			});
 
-			await goto(resolve('/options'));
+			await goto(resolve('/edit'));
 		} catch (err) {
 			if (!active) return;
 

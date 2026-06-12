@@ -1,5 +1,5 @@
 <script>
-	let { budget = $bindable(50_000) } = $props();
+	let { budget = $bindable(50000) } = $props();
 
 	const min = 10_000;
 	const max = 150_000;
