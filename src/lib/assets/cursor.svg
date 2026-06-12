@@ -1,0 +1,38 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <!-- grid: 4px per pixel, 16x16 grid -->
+  <path fill="#38322F" d="
+    M8 8 h4 v4 h-4 z
+    M8 12 h4 v4 h-4 z
+    M12 12 h4 v4 h-4 z
+    M8 16 h4 v4 h-4 z
+    M12 16 h4 v4 h-4 z
+    M16 16 h4 v4 h-4 z
+    M8 20 h4 v4 h-4 z
+    M12 20 h4 v4 h-4 z
+    M16 20 h4 v4 h-4 z
+    M20 20 h4 v4 h-4 z
+    M8 24 h4 v4 h-4 z
+    M12 24 h4 v4 h-4 z
+    M16 24 h4 v4 h-4 z
+    M20 24 h4 v4 h-4 z
+    M24 24 h4 v4 h-4 z
+    M8 28 h4 v4 h-4 z
+    M12 28 h4 v4 h-4 z
+    M16 28 h4 v4 h-4 z
+    M20 28 h4 v4 h-4 z
+    M24 28 h4 v4 h-4 z
+    M28 28 h4 v4 h-4 z
+    M8 32 h4 v4 h-4 z
+    M12 32 h4 v4 h-4 z
+    M16 32 h4 v4 h-4 z
+    M8 36 h4 v4 h-4 z
+    M20 36 h4 v4 h-4 z
+    M24 36 h4 v4 h-4 z
+    M20 40 h4 v4 h-4 z
+    M24 40 h4 v4 h-4 z
+    M24 44 h4 v4 h-4 z
+    M28 44 h4 v4 h-4 z
+    M24 48 h4 v4 h-4 z
+    M28 48 h4 v4 h-4 z
+  "/>
+</svg>
