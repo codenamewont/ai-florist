@@ -15,3 +15,20 @@
 	--color-line: #e5e7eb; /* dividers / light borders */
 	--color-line-strong: #d1d5db; /* card border */
 }
+
+@layer base {
+	html,
+	body {
+		background-color: var(--color-surface);
+	}
+}
+
+@layer utilities {
+	.bg-surface {
+		background-color: var(--color-surface);
+		background-image: url('/paper_texture.png');
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: cover;
+	}
+}
