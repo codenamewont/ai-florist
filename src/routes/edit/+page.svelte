@@ -29,16 +29,22 @@
 	let editHistory = $state([]);
 
 	const imageSrc = $derived(toDataUrl(generatedImage));
+	const hasAreaSelection = $derived(selectionPoints.length > 2);
 	const title = $derived(recipe?.concept ?? 'Generated bouquet');
-	const description = $derived(
-		recipe?.mainFlowers?.length
-			? `${recipe.mainFlowers.join(', ')} · ${recipe.wrapping ?? 'Custom wrap'}`
-			: 'Review and refine your bouquet before choosing a size.'
-	);
+	const description = $derived.by(() => {
+		if (hasAreaSelection) {
+			return 'Your prompt will apply to the marked area only.';
+		}
+
+		if (areaSelectionActive) {
+			return 'Use the pencil to draw a red outline, then describe that area.';
+		}
+
+		return 'Tap the pencil on the image to mark an area, or edit the whole bouquet.';
+	});
 	const selectionPolyline = $derived(
 		selectionPoints.map((point) => `${point.x},${point.y}`).join(' ')
 	);
-	const hasAreaSelection = $derived(selectionPoints.length > 2);
 	const latestEditId = $derived(editHistory[editHistory.length - 1]?.id ?? '');
 
 	/**
@@ -353,18 +359,6 @@
 								: 'Tell me how you would like to change your bouquet...'}
 						class="w-full resize-none rounded-[2rem] border border-pill bg-surface px-6 py-3 text-sm outline-none placeholder:text-muted"
 					></textarea>
-
-					<div class="text-xs text-muted">
-						<p>
-							{#if hasAreaSelection}
-								Your prompt will apply to the marked area only.
-							{:else if areaSelectionActive}
-								Use the pencil to draw a red outline, then describe that area.
-							{:else}
-								Tap the pencil on the image to mark an area, or edit the whole bouquet.
-							{/if}
-						</p>
-					</div>
 				</div>
 
 				<div class="shrink-0 space-y-2">
