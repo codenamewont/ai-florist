@@ -24,8 +24,20 @@
 			: 'moodboard'
 	);
 	let primaryFile = $state(null);
+	let moodboardTiles = $state({
+		color: false,
+		season: false,
+		character: false,
+		location: false
+	});
+	let snsHasImage = $state(false);
 	let loading = $state(false);
 	let error = $state('');
+
+	const recipientLabel = $derived.by(() => {
+		const who = typeof userInput.relationship === 'string' ? userInput.relationship : '';
+		return who ? who.toLowerCase() : 'them';
+	});
 
 	const recipientPronoun = $derived.by(() => {
 		const style = typeof userInput.style === 'string' ? userInput.style.toLowerCase() : '';
@@ -33,6 +45,84 @@
 		if (style === 'feminine') return 'her';
 		return 'their';
 	});
+
+	const MOODBOARD_TILE_COPY = {
+		color: {
+			title: 'A hint of color',
+			description:
+				'The first thread pulled. Warm or cool, bold or shy. Their palette begins to speak.'
+		},
+		season: {
+			title: 'Season in the air',
+			description: 'Spring lightness or winter hush. Time of year will breathe through the bouquet.'
+		},
+		character: {
+			title: 'Their character',
+			description: 'A face, a gesture, a presence. Something in them is starting to take floral form.'
+		},
+		location: {
+			title: 'A sense of place',
+			description:
+				'City grit or quiet coast. Where they belong roots the arrangement in memory.'
+		}
+	};
+
+	const artworkCopy = $derived.by(() => {
+		if (mode === 'sns') {
+			if (snsHasImage) {
+				return {
+					title: 'Feed captured',
+					description:
+						'We will look at the photos and colors in their feed to sense what kind of bouquet fits them.'
+				};
+			}
+
+			return {
+				title: 'Their social world',
+				description: `Upload a screenshot of ${recipientPronoun} feed. One glance is often enough to sense the mood.`
+			};
+		}
+
+		const uploaded = /** @type {const} */ (['color', 'season', 'character', 'location']).filter(
+			(key) => moodboardTiles[key]
+		);
+		const count = uploaded.length;
+
+		if (count === 0) {
+			return {
+				title: 'Gather their mood',
+				description: `Four small glimpses of color, season, character, and place. Together they become the palette for a bouquet made for ${recipientLabel}.`
+			};
+		}
+
+		if (count === 1) {
+			return MOODBOARD_TILE_COPY[uploaded[0]];
+		}
+
+		if (count === 4) {
+			return {
+				title: 'A moodboard whole',
+				description:
+					'Color, season, character, and place. The collage is complete, and their bouquet is ready to take shape.'
+			};
+		}
+
+		if (count === 2) {
+			return {
+				title: 'Taking shape',
+				description:
+					'The moodboard is finding its rhythm. Keep adding. Each image is another note in their story.'
+			};
+		}
+
+		return {
+			title: 'Almost there',
+			description: 'One last glimpse and their world will be fully gathered on the page.'
+		};
+	});
+
+	const artworkTitle = $derived(artworkCopy.title);
+	const artworkDescription = $derived(artworkCopy.description);
 
 	async function continueToMessage() {
 		error = '';
@@ -85,15 +175,23 @@
 	<Header step={2} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col pt-6 lg:flex-row lg:pt-8">
-		<Artwork />
+		<Artwork title={artworkTitle} description={artworkDescription} />
 
 		<section
 			class="relative flex min-h-0 flex-1 flex-col pb-[4.75rem] lg:grid lg:grid-rows-[minmax(0,1fr)_auto] lg:overflow-hidden lg:pb-8"
 		>
 			{#if mode === 'moodboard'}
-				<MoodboardGrid bind:primaryFile caption={`build ${recipientPronoun} moodboard!`} />
+				<MoodboardGrid
+					bind:primaryFile
+					bind:uploadedTiles={moodboardTiles}
+					caption={`build ${recipientPronoun} moodboard!`}
+				/>
 			{:else}
-				<SnsFeedUpload bind:primaryFile caption={`upload ${recipientPronoun} feed!`} />
+				<SnsFeedUpload
+					bind:primaryFile
+					bind:hasImage={snsHasImage}
+					caption={`upload ${recipientPronoun} feed!`}
+				/>
 			{/if}
 
 			<div

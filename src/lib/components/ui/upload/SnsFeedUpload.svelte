@@ -4,13 +4,19 @@
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
-	let { primaryFile = $bindable(null), caption = 'upload their feed!' } = $props();
+	let { primaryFile = $bindable(null), hasImage = $bindable(), caption = 'upload their feed!' } =
+		$props();
 
 	let firstFile = $state(null);
 
 	$effect(() => {
 		const next = firstFile ?? null;
 		if (primaryFile !== next) primaryFile = next;
+	});
+
+	$effect(() => {
+		const next = !!firstFile;
+		if (hasImage !== next) hasImage = next;
 	});
 
 	onMount(async () => {
