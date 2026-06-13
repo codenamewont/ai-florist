@@ -24,6 +24,8 @@
 			: 'moodboard'
 	);
 	let primaryFile = $state(null);
+	let filledCount = $state(0);
+	let allFilled = $state(false);
 	let loading = $state(false);
 	let error = $state('');
 
@@ -32,6 +34,37 @@
 		if (style === 'masculine') return 'his';
 		if (style === 'feminine') return 'her';
 		return 'their';
+	});
+
+	const hasUserContext = $derived(
+		Boolean(userInput.relationship || userInput.occasion || userInput.style)
+	);
+
+	const artworkTitle = $derived.by(() => {
+		const who = userInput.relationship;
+		const whatFor = userInput.occasion;
+		if (!hasUserContext) return 'Title';
+		const occasion = whatFor ? `A ${whatFor} bouquet for` : 'A bouquet for';
+		return `${occasion} ${who ?? '...'}`;
+	});
+
+	const artworkDescription = $derived(
+		hasUserContext
+			? `${userInput.style ?? '—'} style · ₩${Number(userInput.budget ?? 50_000).toLocaleString('ko-KR')} budget`
+			: 'Description Description Description'
+	);
+
+	/** create2(시작) → upload1(1장+) → upload2(전체 채움) */
+	const artworkVariant = $derived.by(() => {
+		if (allFilled) return 'upload2';
+		if (filledCount > 0) return 'upload1';
+		return 'create2';
+	});
+
+	$effect(() => {
+		void mode;
+		filledCount = 0;
+		allFilled = false;
 	});
 
 	async function continueToMessage() {
@@ -84,16 +117,26 @@
 >
 	<Header step={2} total={7} />
 
-	<main class="flex min-h-0 flex-1 flex-col pt-6 lg:flex-row lg:pt-8">
-		<Artwork />
+	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
+		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
 
 		<section
-			class="relative flex min-h-0 flex-1 flex-col pb-[4.75rem] lg:grid lg:grid-rows-[minmax(0,1fr)_auto] lg:overflow-hidden lg:pb-8"
+			class="relative flex min-h-0 flex-1 flex-col pt-6 pb-[4.75rem] lg:grid lg:grid-rows-[minmax(0,1fr)_auto] lg:overflow-hidden lg:pt-8 lg:pb-8"
 		>
 			{#if mode === 'moodboard'}
-				<MoodboardGrid bind:primaryFile caption={`build ${recipientPronoun} moodboard!`} />
+				<MoodboardGrid
+					bind:primaryFile
+					bind:filledCount
+					bind:allFilled
+					caption={`build ${recipientPronoun} moodboard!`}
+				/>
 			{:else}
-				<SnsFeedUpload bind:primaryFile caption={`upload ${recipientPronoun} feed!`} />
+				<SnsFeedUpload
+					bind:primaryFile
+					bind:filledCount
+					bind:allFilled
+					caption={`upload ${recipientPronoun} feed!`}
+				/>
 			{/if}
 
 			<div

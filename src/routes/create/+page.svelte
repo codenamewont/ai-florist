@@ -27,6 +27,8 @@
 		return `${occasion} ${who ?? '...'}`;
 	});
 
+	const artworkVariant = $derived(hasAnySelection ? 'create2' : 'create1');
+
 	const artworkDescription = $derived(
 		hasAnySelection
 			? `${style ?? '—'} style · ₩${budget.toLocaleString('ko-KR')} budget`
@@ -82,7 +84,7 @@
 	<Header step={1} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork title={artworkTitle} description={artworkDescription} />
+		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
 
 		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
 			<ContextForm bind:who bind:whatFor bind:style bind:budget />
