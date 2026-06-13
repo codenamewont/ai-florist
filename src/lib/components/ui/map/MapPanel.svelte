@@ -11,7 +11,7 @@
 		mock = false,
 		fitBounds = false,
 		orderPlainText = '',
-		orderSegments = [],
+		orderKoPlainText = '',
 		onrefresh
 	} = $props();
 
@@ -53,7 +53,7 @@
 	</header>
 
 	<div class="shrink-0 px-6 pb-4 md:px-10 lg:px-12">
-		<FloristOrderMessage plainText={orderPlainText} segments={orderSegments} />
+		<FloristOrderMessage enPlainText={orderPlainText} koPlainText={orderKoPlainText} />
 	</div>
 
 	{#if error}

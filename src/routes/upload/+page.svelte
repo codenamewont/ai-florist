@@ -24,8 +24,22 @@
 			: 'moodboard'
 	);
 	let primaryFile = $state(null);
+	let filledCount = $state(0);
+	let allFilled = $state(false);
 	let loading = $state(false);
 	let error = $state('');
+
+	const artworkVariant = $derived.by(() => {
+		if (filledCount === 0) return 'create1';
+		if (allFilled) return 'upload2';
+		return 'upload1';
+	});
+
+	$effect(() => {
+		void mode;
+		filledCount = 0;
+		allFilled = false;
+	});
 
 	async function continueToMessage() {
 		error = '';
@@ -79,13 +93,13 @@
 	<Header step={2} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork />
+		<Artwork variant={artworkVariant} />
 
 		<section class="relative flex min-h-0 flex-1 flex-col pb-[4.75rem] lg:overflow-hidden lg:pb-0">
 			{#if mode === 'moodboard'}
-				<MoodboardGrid bind:primaryFile />
+				<MoodboardGrid bind:primaryFile bind:filledCount bind:allFilled />
 			{:else}
-				<SnsFeedUpload bind:primaryFile />
+				<SnsFeedUpload bind:primaryFile bind:filledCount bind:allFilled />
 			{/if}
 
 			<div

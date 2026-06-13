@@ -4,13 +4,23 @@
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
-	let { primaryFile = $bindable(null) } = $props();
+	let {
+		primaryFile = $bindable(null),
+		filledCount = $bindable(0),
+		allFilled = $bindable(false)
+	} = $props();
 
 	let firstFile = $state(null);
 	let secondFile = $state(null);
 
 	$effect(() => {
 		primaryFile = firstFile ?? secondFile ?? null;
+	});
+
+	$effect(() => {
+		const count = [firstFile, secondFile].filter(Boolean).length;
+		filledCount = count;
+		allFilled = count === 2;
 	});
 
 	onMount(async () => {

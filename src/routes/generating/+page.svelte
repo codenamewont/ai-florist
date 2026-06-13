@@ -3,25 +3,62 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
+	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
+	import GenerationActivityFeed from '$lib/components/ui/generating/GenerationActivityFeed.svelte';
 	import { buildRecipe, generateImages } from '$lib/flowerFlow/api.js';
-	import { clearFlow, getFlowObject, loadFlow, saveFlow } from '$lib/flowerFlow/session.js';
+	import { createGenerationProgress, DEFAULT_ESTIMATED_MS, MOCK_ESTIMATED_MS } from '$lib/flowerFlow/generationProgress.js';
+	import { createGeneratingArtworkCycle } from '$lib/flowerFlow/generatingArtworkCycle.js';
+	import {
+		clearFlow,
+		getFlowObject,
+		getFlowString,
+		getFlowUserInput,
+		loadFlow,
+		saveFlow
+	} from '$lib/flowerFlow/session.js';
 
 	const MAX_RETRIES = 5;
+	const userInput = getFlowUserInput();
+	const cardMessage = getFlowString('cardMessage');
 
-	let status = $state('Preparing bouquet recipe...');
+	const artworkTitle = $derived.by(() => {
+		const who = typeof userInput.relationship === 'string' ? userInput.relationship : null;
+		const whatFor = typeof userInput.occasion === 'string' ? userInput.occasion : null;
+		if (!who && !whatFor) return 'Your bouquet';
+		const occasion = whatFor ? `A ${whatFor} bouquet for` : 'A bouquet for';
+		return `${occasion} ${who ?? '...'}`;
+	});
+
+	const artworkDescription = $derived(cardMessage || '잠시 관리중 ~');
+
+	/** @type {import('$lib/components/ui/Artwork/artworkVariants.js').ArtworkVariant} */
+	let artworkVariant = $state('create2');
+
+	let activeStepIndex = $state(0);
+	let retryLabel = $state('');
 	let error = $state('');
 	let canRetry = $state(false);
 
 	let active = true;
+	/** @type {ReturnType<typeof createGenerationProgress> | null} */
+	let progress = null;
+	/** @type {ReturnType<typeof createGeneratingArtworkCycle> | null} */
+	let artworkCycle = null;
+
+	function startArtworkCycle() {
+		artworkCycle?.dispose();
+		artworkCycle = createGeneratingArtworkCycle((variant) => {
+			artworkVariant = variant;
+		});
+		artworkCycle.start();
+	}
 
 	/** @param {number} ms */
 	function wait(ms) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
+		return new Promise((resolveWait) => setTimeout(resolveWait, ms));
 	}
 
 	/**
-	 * Read the structured fields the server now sends. Falls back to message
-	 * sniffing only if an older/unstructured error slips through.
 	 * @param {any} err
 	 */
 	function classify(err) {
@@ -42,9 +79,6 @@
 	}
 
 	/**
-	 * Run a task with a finite, classified retry policy: permanent errors stop
-	 * immediately, transient ones retry up to MAX_RETRIES respecting the
-	 * server-provided delay, and the real error is surfaced either way.
 	 * @template T
 	 * @param {string} label
 	 * @param {() => Promise<T>} task
@@ -55,8 +89,8 @@
 
 		while (active) {
 			try {
-				status =
-					attempt === 0 ? label : `Retrying ${label.toLowerCase()} (${attempt}/${MAX_RETRIES})...`;
+				retryLabel =
+					attempt === 0 ? '' : `Retrying ${label.toLowerCase()} (${attempt}/${MAX_RETRIES})…`;
 				error = '';
 				return await task();
 			} catch (err) {
@@ -68,7 +102,7 @@
 
 				attempt += 1;
 				const seconds = Math.round(retryAfterMs / 1000);
-				status = `AI provider is busy. Retrying in ${seconds}s (${attempt}/${MAX_RETRIES})...`;
+				retryLabel = `AI provider is busy. Retrying in ${seconds}s (${attempt}/${MAX_RETRIES})…`;
 				await wait(retryAfterMs);
 			}
 		}
@@ -77,10 +111,15 @@
 	}
 
 	async function runGeneration() {
+		if (!progress) return;
+
 		canRetry = false;
+		error = '';
+		retryLabel = '';
+
 		const flow = loadFlow();
 		const jobId = typeof flow.jobId === 'string' ? flow.jobId : '';
-		const userInput = getFlowObject('userInput') ?? {};
+		const sessionUserInput = getFlowObject('userInput') ?? {};
 
 		if (!jobId) {
 			await goto(resolve('/create'));
@@ -88,21 +127,23 @@
 		}
 
 		try {
+			const estimatedMs = flow.mock ? MOCK_ESTIMATED_MS : DEFAULT_ESTIMATED_MS;
+			progress.begin({ estimatedMs });
+
 			const existingRecipe = getFlowObject('recipe');
 			if (!existingRecipe) {
-				const recipeResult = await runWithRetry('Building bouquet recipe...', () =>
-					buildRecipe(jobId, userInput)
+				const recipeResult = await runWithRetry('Building bouquet recipe', () =>
+					buildRecipe(jobId, sessionUserInput)
 				);
 				saveFlow({ recipe: recipeResult.recipe });
 			}
 
-			const imageResult = await runWithRetry('Generating bouquet image...', () =>
+			const imageResult = await runWithRetry('Generating bouquet image', () =>
 				generateImages(jobId)
 			);
-			// Do NOT persist the multi-MB base64 images in sessionStorage — Safari caps
-			// it at ~5MB and throws "QuotaExceededError: The quota has been exceeded."
-			// The images already live server-side in the job; the options and result
-			// pages fetch them by jobId. We only keep lightweight metadata here.
+
+			await progress.finishWhenReady();
+
 			saveFlow({
 				imagesJobId: jobId,
 				imagePrompt: imageResult.imagePrompt,
@@ -113,68 +154,69 @@
 		} catch (err) {
 			if (!active) return;
 
-			// The server lost this job (e.g. a dev-server restart wipes the in-memory
-			// job store). The stored jobId is dead, so retrying is pointless — clear
-			// the stale flow and send the user back to re-upload.
 			const code = err && typeof err === 'object' && 'code' in err ? err.code : '';
 			const stale =
 				code === 'job_not_found' || (err && typeof err === 'object' && err.status === 404);
 			if (stale) {
-				// Keep the user's entered context (relationship/occasion/etc.), drop the
-				// dead job, and re-upload to mint a fresh one.
-				const userInput = getFlowObject('userInput');
+				const preservedInput = getFlowObject('userInput');
 				clearFlow();
-				if (userInput) saveFlow({ userInput });
-				error = '';
-				status = 'This session expired. Starting over...';
+				if (preservedInput) saveFlow({ userInput: preservedInput });
+				retryLabel = '';
 				await goto(resolve('/upload'));
 				return;
 			}
 
 			const { permanent } = classify(err);
 			error = err instanceof Error ? err.message : 'Generation failed';
-			status = permanent ? 'Generation is blocked.' : 'Still failing after several retries.';
+			retryLabel = permanent ? 'Generation is blocked.' : 'Still failing after several retries.';
 			canRetry = true;
+			progress?.reset();
 		}
 	}
 
 	function retry() {
 		if (!active) return;
+		startArtworkCycle();
 		runGeneration();
+	}
+
+	function backToMessage() {
+		goto(resolve('/message'));
 	}
 
 	onMount(() => {
 		active = true;
+		progress = createGenerationProgress((index) => {
+			activeStepIndex = index;
+		});
+		startArtworkCycle();
 		runGeneration();
+
 		return () => {
 			active = false;
+			progress?.dispose();
+			artworkCycle?.dispose();
 		};
 	});
 </script>
 
-<div class="min-h-dvh bg-surface text-ink">
+<div
+	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
+>
 	<Header step={4} total={7} />
 
-	<main class="mx-auto flex max-w-xl flex-col items-start px-6 py-16">
-		<h1 class="mb-3 text-2xl">Generating</h1>
-		<p class="text-sm text-muted">{status}</p>
+	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
+		<Artwork comingSoon variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
 
-		{#if error}
-			<p class="mt-6 text-sm text-red-600">{error}</p>
-			<div class="mt-4 flex gap-3">
-				{#if canRetry}
-					<button type="button" class="bg-pill px-4 py-2 text-sm text-surface" onclick={retry}>
-						Try again
-					</button>
-				{/if}
-				<button
-					type="button"
-					class="border border-pill px-4 py-2 text-sm text-ink"
-					onclick={() => goto(resolve('/message'))}
-				>
-					Back to message
-				</button>
-			</div>
-		{/if}
+		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
+			<GenerationActivityFeed
+				{activeStepIndex}
+				{error}
+				{retryLabel}
+				{canRetry}
+				onRetry={retry}
+				onBack={backToMessage}
+			/>
+		</section>
 	</main>
 </div>

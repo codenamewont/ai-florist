@@ -77,7 +77,7 @@
 	<Header step={5} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork title={artworkTitle} description={artworkDescription} />
+		<Artwork variant="generated" title={artworkTitle} description={artworkDescription} />
 
 		<section class="relative flex min-h-0 flex-1 flex-col pb-[4.75rem] lg:overflow-y-auto lg:pb-0">
 			<OptionsPanel {images} {loading} bind:selectedSize />
