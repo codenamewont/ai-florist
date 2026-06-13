@@ -18,7 +18,7 @@
 	let loading = $state(true);
 	let error = $state('');
 	let prompt = $state('');
-	let mode = $state('whole');
+	let areaSelectionActive = $state(false);
 	let drawing = $state(false);
 	let selectionPoints = $state([]);
 	let initialImage = $state(null);
@@ -38,7 +38,7 @@
 	const selectionPolyline = $derived(
 		selectionPoints.map((point) => `${point.x},${point.y}`).join(' ')
 	);
-	const canSaveAreaPrompt = $derived(mode !== 'area' || selectionPoints.length > 2);
+	const hasAreaSelection = $derived(selectionPoints.length > 2);
 	const latestEditId = $derived(editHistory[editHistory.length - 1]?.id ?? '');
 
 	/**
@@ -54,7 +54,7 @@
 
 	/** @param {PointerEvent} event */
 	function startDrawing(event) {
-		if (mode !== 'area') return;
+		if (!areaSelectionActive) return;
 		event.preventDefault();
 		/** @type {SVGElement} */ (event.currentTarget).setPointerCapture(event.pointerId);
 		drawing = true;
@@ -63,7 +63,7 @@
 
 	/** @param {PointerEvent} event */
 	function draw(event) {
-		if (!drawing || mode !== 'area') return;
+		if (!drawing || !areaSelectionActive) return;
 		event.preventDefault();
 		selectionPoints = [...selectionPoints, getPoint(event)];
 	}
@@ -72,8 +72,23 @@
 		drawing = false;
 	}
 
-	function clearSelection() {
+	function startAreaSelection() {
+		areaSelectionActive = true;
+	}
+
+	function cancelAreaSelection() {
+		areaSelectionActive = false;
+		drawing = false;
 		selectionPoints = [];
+	}
+
+	function toggleAreaTool() {
+		if (areaSelectionActive) {
+			cancelAreaSelection();
+			return;
+		}
+
+		startAreaSelection();
 	}
 
 	/** @param {string} text */
@@ -87,15 +102,15 @@
 			return null;
 		}
 
-		if (!canSaveAreaPrompt) {
-			error = 'Draw the area you want to change first.';
+		if (selectionPoints.length > 0 && !hasAreaSelection) {
+			error = 'Finish drawing the area you want to change, or cancel with X.';
 			return null;
 		}
 
 		return {
-			mode,
+			mode: hasAreaSelection ? 'area' : 'whole',
 			prompt: prompt.trim(),
-			selection: mode === 'area' ? selectionPoints : []
+			selection: hasAreaSelection ? selectionPoints : []
 		};
 	}
 
@@ -119,7 +134,7 @@
 				}
 			];
 			prompt = '';
-			selectionPoints = [];
+			cancelAreaSelection();
 			saveFlow({
 				editInstruction: instruction,
 				imagePrompt: result.imagePrompt,
@@ -174,6 +189,89 @@
 	});
 </script>
 
+{#snippet editableImageFrame(image, editable = false)}
+	<div class="relative w-[42%] overflow-hidden bg-track ring-1 ring-black/5">
+		{#if image}
+			<img
+				src={toDataUrl(image)}
+				alt="Generated bouquet"
+				class={[
+					'aspect-[4/5] w-full object-contain',
+					editable && areaSelectionActive ? 'opacity-90' : ''
+				]}
+				draggable="false"
+			/>
+		{:else}
+			<div class="aspect-[4/5] w-full bg-placeholder"></div>
+		{/if}
+
+		{#if editable && image}
+			<button
+				type="button"
+				class="absolute top-2 right-2 z-20 flex size-8 items-center justify-center rounded-full bg-white/95 text-ink shadow-md ring-1 ring-black/10 transition-colors hover:bg-white"
+				aria-label={areaSelectionActive ? 'Cancel area selection' : 'Select area to edit'}
+				onclick={toggleAreaTool}
+			>
+				{#if areaSelectionActive}
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						class="size-4"
+						aria-hidden="true"
+					>
+						<path d="M18 6 6 18" />
+						<path d="m6 6 12 12" />
+					</svg>
+				{:else}
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="size-4"
+						aria-hidden="true"
+					>
+						<path d="M12 20h9" />
+						<path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+					</svg>
+				{/if}
+			</button>
+
+			{#if areaSelectionActive}
+				<svg
+					class="absolute inset-0 z-10 h-full w-full touch-none"
+					viewBox="0 0 100 100"
+					preserveAspectRatio="none"
+					role="application"
+					aria-label="Draw an area to edit"
+					onpointerdown={startDrawing}
+					onpointermove={draw}
+					onpointerup={stopDrawing}
+					onpointercancel={stopDrawing}
+					onpointerleave={stopDrawing}
+				>
+					{#if selectionPoints.length > 1}
+						<polyline
+							points={selectionPolyline}
+							fill="rgba(239,68,68,0.12)"
+							stroke="#ef4444"
+							stroke-width="1.2"
+							vector-effect="non-scaling-stroke"
+						/>
+					{/if}
+				</svg>
+			{/if}
+		{/if}
+	</div>
+{/snippet}
+
 <div
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
@@ -208,60 +306,7 @@
 				<div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
 					<div class="space-y-2">
 						<p class="text-xs text-muted">Generated image</p>
-						<div class="relative w-[42%] overflow-hidden bg-track ring-1 ring-black/5">
-							{#if initialImage}
-								<img
-									src={toDataUrl(initialImage)}
-									alt="Generated bouquet"
-									class={[
-										'aspect-[4/5] w-full object-contain',
-										mode === 'area' && editHistory.length === 0 ? 'opacity-75' : ''
-									]}
-									draggable="false"
-								/>
-							{:else if imageSrc}
-								<img
-									src={imageSrc}
-									alt="Generated bouquet"
-									class={[
-										'aspect-[4/5] w-full object-contain',
-										mode === 'area' && editHistory.length === 0 ? 'opacity-75' : ''
-									]}
-									draggable="false"
-								/>
-							{:else}
-								<div class="aspect-[4/5] w-full bg-placeholder"></div>
-							{/if}
-
-							{#if mode === 'area' && editHistory.length === 0}
-								<svg
-									class="absolute inset-0 h-full w-full touch-none"
-									viewBox="0 0 100 100"
-									preserveAspectRatio="none"
-									role="application"
-									aria-label="Draw an area to edit"
-									onpointerdown={startDrawing}
-									onpointermove={draw}
-									onpointerup={stopDrawing}
-									onpointercancel={stopDrawing}
-									onpointerleave={stopDrawing}
-								>
-									{#if selectionPoints.length > 1}
-										<polyline
-											points={selectionPolyline}
-											fill="rgba(255,255,255,0.18)"
-											stroke="white"
-											stroke-width="0.8"
-											stroke-dasharray="1.4 1.2"
-											vector-effect="non-scaling-stroke"
-										/>
-										{#each selectionPoints.filter((_, index) => index % 8 === 0) as point, index (index)}
-											<circle cx={point.x} cy={point.y} r="0.8" fill="white" />
-										{/each}
-									{/if}
-								</svg>
-							{/if}
-						</div>
+						{@render editableImageFrame(initialImage ?? generatedImage, editHistory.length === 0)}
 					</div>
 
 					{#each editHistory as edit (edit.id)}
@@ -278,75 +323,11 @@
 							</div>
 
 							<div class="space-y-2">
-								<div class="relative w-[42%] overflow-hidden bg-track ring-1 ring-black/5">
-									{#if edit.afterImage}
-										<img
-											src={toDataUrl(edit.afterImage)}
-											alt="Edited bouquet result"
-											class={[
-												'aspect-[4/5] w-full object-contain',
-												mode === 'area' && edit.id === latestEditId ? 'opacity-75' : ''
-											]}
-											draggable="false"
-										/>
-									{/if}
-
-									{#if mode === 'area' && edit.id === latestEditId}
-										<svg
-											class="absolute inset-0 h-full w-full touch-none"
-											viewBox="0 0 100 100"
-											preserveAspectRatio="none"
-											role="application"
-											aria-label="Draw an area to edit"
-											onpointerdown={startDrawing}
-											onpointermove={draw}
-											onpointerup={stopDrawing}
-											onpointercancel={stopDrawing}
-											onpointerleave={stopDrawing}
-										>
-											{#if selectionPoints.length > 1}
-												<polyline
-													points={selectionPolyline}
-													fill="rgba(255,255,255,0.18)"
-													stroke="white"
-													stroke-width="0.8"
-													stroke-dasharray="1.4 1.2"
-													vector-effect="non-scaling-stroke"
-												/>
-												{#each selectionPoints.filter((_, index) => index % 8 === 0) as point, index (index)}
-													<circle cx={point.x} cy={point.y} r="0.8" fill="white" />
-												{/each}
-											{/if}
-										</svg>
-									{/if}
-								</div>
+								{@render editableImageFrame(edit.afterImage, edit.id === latestEditId)}
 								<p class="text-xs text-muted">Result</p>
 							</div>
 						</div>
 					{/each}
-				</div>
-
-				<div class="flex shrink-0 rounded-full bg-track p-1 ring-1 ring-black/5">
-					<button
-						type="button"
-						onclick={() => (mode = 'whole')}
-						class={[
-							'flex-1 rounded-full px-4 py-2 text-sm transition-colors',
-							mode === 'whole' ? 'bg-pill text-surface' : 'text-muted hover:text-ink'
-						]}
-					>
-						Whole image
-					</button>
-					<button
-						type="button"
-						onclick={() => (mode = 'area')}
-						class={[
-							'flex-1 rounded-full px-4 py-2 text-sm transition-colors',
-							mode === 'area' ? 'bg-pill text-surface' : 'text-muted hover:text-ink'
-						]}
-					>
-						Select area
-					</button>
 				</div>
 
 				<div class="flex shrink-0 flex-wrap gap-2">
@@ -365,26 +346,24 @@
 					<textarea
 						bind:value={prompt}
 						rows="2"
-						placeholder={mode === 'area'
+						placeholder={hasAreaSelection
 							? 'Tell me how to change the selected area...'
-							: 'Tell me how you would like to change your bouquet...'}
+							: areaSelectionActive
+								? 'Draw on the image, then describe the area...'
+								: 'Tell me how you would like to change your bouquet...'}
 						class="w-full resize-none rounded-[2rem] border border-pill bg-surface px-6 py-3 text-sm outline-none placeholder:text-muted"
 					></textarea>
 
-					<div class="flex flex-wrap items-center justify-between gap-3 text-xs text-muted">
+					<div class="text-xs text-muted">
 						<p>
-							{#if mode === 'area'}
-								Draw over the bouquet, then describe only that selected area.
+							{#if hasAreaSelection}
+								Your prompt will apply to the marked area only.
+							{:else if areaSelectionActive}
+								Use the pencil to draw a red outline, then describe that area.
 							{:else}
-								Prompt applies to the whole generated bouquet.
+								Tap the pencil on the image to mark an area, or edit the whole bouquet.
 							{/if}
 						</p>
-
-						{#if selectionPoints.length > 0}
-							<button type="button" class="underline hover:text-ink" onclick={clearSelection}>
-								Clear selection
-							</button>
-						{/if}
 					</div>
 				</div>
 
