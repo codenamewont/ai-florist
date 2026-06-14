@@ -8,6 +8,7 @@
 	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import Header from '$lib/components/ui/Header.svelte';
 	import { editImages, fetchJob, finalizeJob, toDataUrl } from '$lib/flowerFlow/api.js';
+	import { buildBriefBouquetTitle } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 	import { getFlowString, saveFlow } from '$lib/flowerFlow/session.js';
 
 	const jobId = getFlowString('jobId');
@@ -26,7 +27,7 @@
 	let selectionPoints = $state([]);
 	let initialImage = $state(null);
 	let generatedImage = $state(null);
-	let recipe = $state(null);
+	let moodAnalysis = $state(null);
 	let editing = $state(false);
 	let continuing = $state(false);
 	/** @type {Array<{ id: string, role: 'user' | 'assistant', prompt?: string, mode?: string, status?: 'pending' | 'done' | 'error', afterImage?: { mimeType: string, base64: string } | null, error?: string }>} */
@@ -36,7 +37,7 @@
 
 	const imageSrc = $derived(toDataUrl(generatedImage));
 	const hasAreaSelection = $derived(selectionPoints.length > 2);
-	const title = $derived(recipe?.concept ?? 'Generated bouquet');
+	const title = $derived(buildBriefBouquetTitle(moodAnalysis));
 	const description = $derived.by(() => {
 		if (hasAreaSelection) {
 			return 'Your prompt will apply to the marked area only.';
@@ -183,9 +184,6 @@
 			const result = await editImages(jobId, instruction);
 			const afterImage = result.images?.primary ?? null;
 			generatedImage = afterImage;
-			if (result.recipe) {
-				recipe = result.recipe;
-			}
 			chatMessages = chatMessages.map((message) =>
 				message.id === assistantMessageId
 					? { ...message, status: 'done', afterImage }
@@ -240,7 +238,7 @@
 
 			initialImage = job.images.primary;
 			generatedImage = job.images.primary;
-			recipe = job.recipe ?? null;
+			moodAnalysis = job.moodAnalysis ?? null;
 			loading = false;
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to load generated bouquet';
@@ -250,19 +248,19 @@
 </script>
 
 {#snippet editableImageFrame(image, editable = false)}
-	<div class="relative w-[42%] overflow-hidden bg-track ring-1 ring-black/5">
+	<div class="relative w-full max-w-44 sm:max-w-52 overflow-hidden bg-track ring-1 ring-black/5">
 		{#if image}
 			<img
 				src={toDataUrl(image)}
 				alt="Generated bouquet"
 				class={[
-					'aspect-[4/5] w-full object-contain',
+					'aspect-[3/4] w-full object-contain object-center',
 					editable && areaSelectionActive ? 'opacity-90' : ''
 				]}
 				draggable="false"
 			/>
 		{:else}
-			<div class="aspect-[4/5] w-full bg-placeholder"></div>
+			<div class="aspect-[3/4] w-full bg-placeholder"></div>
 		{/if}
 
 		{#if editable && image}
@@ -342,13 +340,17 @@
 			class="flex min-h-0 w-full shrink-0 flex-col border-b border-line px-6 py-6 lg:w-[44%] lg:border-r lg:border-b-0 lg:px-10 lg:py-8"
 		>
 			<div class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-col items-center justify-center gap-6">
-				<div class="overflow-hidden bg-track shadow-sm ring-1 ring-black/5">
+				<div class="w-full max-w-24 overflow-hidden bg-track shadow-sm ring-1 ring-black/5 sm:max-w-28 lg:max-w-75">
 					{#if loading}
-						<div class="aspect-[4/5] w-full animate-pulse bg-placeholder"></div>
+						<div class="aspect-[3/4] w-full animate-pulse bg-placeholder"></div>
 					{:else if imageSrc}
-						<img src={imageSrc} alt="Generated bouquet" class="aspect-[4/5] w-full object-cover" />
+						<img
+							src={imageSrc}
+							alt="Generated bouquet"
+							class="aspect-[3/4] w-full object-contain object-center"
+						/>
 					{:else}
-						<div class="aspect-[4/5] w-full bg-placeholder"></div>
+						<div class="aspect-[3/4] w-full bg-placeholder"></div>
 					{/if}
 				</div>
 

@@ -62,7 +62,8 @@ export function mockImagePrompt(recipe) {
 		`Use ${recipe.mainFlowers.join(', ')} as the main flower, mixed with ${recipe.subFlowers.join(', ')}, and ${recipe.greenery.join(', ')}.`,
 		`Use a ${recipe.colors.join(', ')} color palette.`,
 		`Wrap it with ${recipe.wrapping}.`,
-		'White background, soft natural lighting, Korean florist style.'
+		'White background, soft natural lighting, Korean florist style.',
+		'Vertical portrait composition with a 3:4 aspect ratio (width:height). Frame the full bouquet without cropping.'
 	].join(' ');
 }
 

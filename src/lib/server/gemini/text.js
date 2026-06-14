@@ -3,6 +3,7 @@
 /** @typedef {import('../flowerFlow/jobStore.js').UserInput} UserInput */
 
 import { matchFlowersFromMood } from '../flowerFlow/flowerDB.js';
+import { BOUQUET_IMAGE_ASPECT_PROMPT } from '../../flowerFlow/bouquetImageFormat.js';
 import { getTextModel, isGeminiConfigured, parseJsonFromText } from './client.js';
 import { mockRecipe } from './mock.js';
 
@@ -91,7 +92,8 @@ Rules:
 - White background, soft natural lighting
 - Korean florist style
 - Describe bouquet composition only (flower types, colors, wrapping, mood)
-- Do NOT specify alternate size variants — generate one final customer preview image
+- ${BOUQUET_IMAGE_ASPECT_PROMPT}
+- Do NOT specify alternate size variants; generate one final customer preview image
 - Return plain text only, no markdown`;
 
 	const result = await model.generateContent(prompt);
