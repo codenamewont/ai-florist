@@ -19,6 +19,7 @@
 		loadFlow,
 		saveFlow
 	} from '$lib/flowerFlow/session.js';
+	import { ARTWORK_CARD_DEFAULTS } from '$lib/flowerFlow/artworkCardCopy.js';
 
 	const userInput = getFlowUserInput();
 
@@ -27,11 +28,19 @@
 	let error = $state('');
 	let skipping = $state(false);
 
-	const artworkVariant = $derived(message.trim() ? 'message1' : 'upload2');
+	const hasMessage = $derived(message.trim().length > 0);
 
-	const artworkTitle = $derived(message ? 'Your message' : 'Title');
+	const artworkVariant = $derived(hasMessage ? 'message1' : 'upload2');
 
-	const artworkDescription = $derived(message || 'Description Description Description');
+	const artworkTitle = $derived(
+		hasMessage ? 'Your message' : ARTWORK_CARD_DEFAULTS.message.title
+	);
+
+	const artworkDescription = $derived(
+		hasMessage ? message.trim() : ARTWORK_CARD_DEFAULTS.message.description
+	);
+
+	const artworkCardMode = $derived(hasMessage ? 'summary' : 'instruction');
 
 	onMount(() => {
 		const hadSnapshot = !!getFlowObject('devMessageSnapshot');
@@ -107,7 +116,12 @@
 	<Header step={3} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
+		<Artwork
+			variant={artworkVariant}
+			title={artworkTitle}
+			description={artworkDescription}
+			cardMode={artworkCardMode}
+		/>
 
 		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
 			<div class="min-h-0 flex-1 overflow-y-auto">

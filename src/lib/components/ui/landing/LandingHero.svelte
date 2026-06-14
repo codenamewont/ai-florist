@@ -1,7 +1,9 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import Button from '$lib/components/ui/Button.svelte';
+	import FlowContinueBar, {
+		FLOW_CONTINUE_BUTTON
+	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import GrowthMetaphorIllustration from '$lib/components/ui/landing/GrowthMetaphorIllustration.svelte';
 
 	function handleStart() {
@@ -10,7 +12,7 @@
 </script>
 
 <section
-	class="relative flex min-h-dvh flex-col bg-surface px-6 py-8 font-sans text-ink sm:px-10 sm:py-10 lg:px-14"
+	class="relative flex min-h-dvh flex-col bg-surface px-6 py-8 pb-[3.75rem] font-sans text-ink sm:px-10 sm:py-10 lg:px-14 lg:pb-8"
 	aria-label="Every bouquet starts with a muse — seed to bouquet growth metaphor"
 >
 	<div class="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col justify-center">
@@ -21,16 +23,20 @@
 		</p>
 	</div>
 
-	<div class="mx-auto flex w-full max-w-6xl items-end justify-between gap-6 pb-2 pt-10">
-		<div class="min-w-0 text-left">
-			<p class="text-lg leading-none tracking-wide text-ink">AI Florist</p>
-			<h1 class="mt-2 text-4xl leading-none font-bold tracking-wide sm:text-5xl lg:text-6xl">
-				DearYou
-			</h1>
-		</div>
-
-		<div class="shrink-0 pb-1">
-			<Button onclick={handleStart}>start creating</Button>
-		</div>
+	<div class="mx-auto w-full max-w-6xl pt-10 pb-2">
+		<p class="text-lg leading-none tracking-wide text-ink">AI Florist</p>
+		<h1 class="mt-2 text-4xl leading-none font-bold tracking-wide sm:text-5xl lg:text-6xl">
+			Fleumuse
+		</h1>
 	</div>
+
+	<!--
+		create 등 플로우 페이지 FlowContinueBar와 동일 위치:
+		mobile — 하단 고정 / desktop — 우측 56% 패널 하단 오른쪽
+	-->
+	<FlowContinueBar class="lg:!fixed lg:top-auto lg:right-0 lg:bottom-8 lg:left-[44%]">
+		<button type="button" onclick={handleStart} class={FLOW_CONTINUE_BUTTON}>
+			Start Creating ->
+		</button>
+	</FlowContinueBar>
 </section>
