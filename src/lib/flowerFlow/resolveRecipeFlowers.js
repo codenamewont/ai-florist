@@ -1,7 +1,8 @@
 import { flowerCatalogLite } from './flowerCatalogLite.js';
+import { getFlowerKo } from './flowerCatalogKo.js';
 
 /**
- * @typedef {{ id: number, name: string, wordOfFlower: string, imageSrc: string, label: string, role: 'main' | 'sub' }} RecipeFlowerCard
+ * @typedef {{ id: number, name: string, nameKo: string, wordOfFlower: string, wordOfFlowerKo: string, imageSrc: string, label: string, role: 'main' | 'sub' }} RecipeFlowerCard
  */
 
 /** @param {string} name */
@@ -25,7 +26,6 @@ function primaryName(name) {
  */
 function matchCatalogFlower(label) {
 	const normalized = normalizeName(label);
-	const primary = primaryName(label);
 
 	for (const flower of flowerCatalogLite) {
 		const catalogPrimary = primaryName(flower.name);
@@ -63,10 +63,13 @@ export function resolveRecipeFlowers(recipe, getImageSrc) {
 			if (!match || seenIds.has(match.id)) continue;
 
 			seenIds.add(match.id);
+			const ko = getFlowerKo(match.id, match.name, match.wordOfFlower);
 			cards.push({
 				id: match.id,
 				name: match.name,
+				nameKo: ko.nameKo,
 				wordOfFlower: match.wordOfFlower,
+				wordOfFlowerKo: ko.wordOfFlowerKo,
 				label,
 				role,
 				imageSrc: getImageSrc(match.id)

@@ -1,7 +1,7 @@
 <script>
 	import BouquetFlowerCard from './BouquetFlowerCard.svelte';
 
-	/** @type {{ id: number, name: string, wordOfFlower: string, imageSrc: string, role?: 'main' | 'sub' }[]} */
+	/** @type {{ id: number, name: string, nameKo: string, wordOfFlower: string, wordOfFlowerKo: string, imageSrc: string, role?: 'main' | 'sub' }[]} */
 	let { flowers = [] } = $props();
 </script>
 
@@ -17,7 +17,9 @@
 			{#each flowers as flower (flower.id)}
 				<BouquetFlowerCard
 					name={flower.name}
+					nameKo={flower.nameKo}
 					wordOfFlower={flower.wordOfFlower}
+					wordOfFlowerKo={flower.wordOfFlowerKo}
 					imageSrc={flower.imageSrc}
 					role={flower.role ?? 'main'}
 				/>
