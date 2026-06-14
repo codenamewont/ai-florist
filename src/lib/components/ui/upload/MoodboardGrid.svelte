@@ -4,7 +4,7 @@
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
-	let { primaryFile = $bindable(null), caption = 'build their moodboard!' } = $props();
+	let { primaryFile = $bindable(null), caption = 'build their moodboard!', filledCount = $bindable(0), allFilled = $bindable(false) } = $props();
 
 	let colorFile = $state(null);
 	let seasonFile = $state(null);
@@ -14,6 +14,12 @@
 	$effect(() => {
 		const next = colorFile ?? seasonFile ?? characterFile ?? locationFile ?? null;
 		if (primaryFile !== next) primaryFile = next;
+	});
+
+	$effect(() => {
+		const count = [colorFile, seasonFile, characterFile, locationFile].filter(Boolean).length;
+		filledCount = count;
+		allFilled = count === 4;
 	});
 
 	onMount(async () => {

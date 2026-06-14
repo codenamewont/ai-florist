@@ -24,6 +24,8 @@
 	let error = $state('');
 	let skipping = $state(false);
 
+	const artworkVariant = $derived(message.trim() ? 'message1' : 'upload2');
+
 	const artworkTitle = $derived(message ? 'Your message' : 'Title');
 
 	const artworkDescription = $derived(message || 'Description Description Description');
@@ -102,7 +104,7 @@
 	<Header step={3} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork title={artworkTitle} description={artworkDescription} />
+		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
 
 		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
 			<MessageForm bind:message />
