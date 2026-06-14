@@ -22,7 +22,7 @@
 	let floristNote = $state('');
 	let fitMapBounds = $state(true);
 	let orderPlainText = $state('');
-	let orderSegments = $state([]);
+	let orderKoPlainText = $state('');
 	let selectedImage = $state(null);
 
 	const sessionUserInput = getFlowObject('userInput') ?? {};
@@ -83,7 +83,7 @@
 				recipe: job.recipe
 			});
 			orderPlainText = order.plainText;
-			orderSegments = order.segments;
+			orderKoPlainText = order.ko.plainText;
 		} catch {
 			// job 없어도 지도·꽃집 검색은 계속
 		}
@@ -108,7 +108,7 @@
 				{error}
 				{mock}
 				{orderPlainText}
-				{orderSegments}
+				{orderKoPlainText}
 				fitBounds={fitMapBounds}
 				onrefresh={(lat, lng) => loadShops(lat, lng, { fitBounds: false })}
 			/>

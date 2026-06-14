@@ -124,6 +124,21 @@
 	const artworkTitle = $derived(artworkCopy.title);
 	const artworkDescription = $derived(artworkCopy.description);
 
+	/** create2(시작) → upload1(1장+) → upload2(전체 채움) */
+	const artworkVariant = $derived.by(() => {
+		if (mode === 'sns') {
+			if (snsHasImage) return 'upload2';
+			return 'create2';
+		}
+
+		const count = ['color', 'season', 'character', 'location'].filter(
+			(key) => moodboardTiles[key]
+		).length;
+		if (count === 4) return 'upload2';
+		if (count > 0) return 'upload1';
+		return 'create2';
+	});
+
 	async function continueToMessage() {
 		error = '';
 
@@ -174,11 +189,11 @@
 >
 	<Header step={2} total={7} />
 
-	<main class="flex min-h-0 flex-1 flex-col pt-6 lg:flex-row lg:pt-8">
-		<Artwork title={artworkTitle} description={artworkDescription} />
+	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
+		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
 
 		<section
-			class="relative flex min-h-0 flex-1 flex-col pb-[4.75rem] lg:grid lg:grid-rows-[minmax(0,1fr)_auto] lg:overflow-hidden lg:pb-8"
+			class="relative flex min-h-0 flex-1 flex-col pt-6 pb-[4.75rem] lg:grid lg:grid-rows-[minmax(0,1fr)_auto] lg:overflow-hidden lg:pt-8 lg:pb-8"
 		>
 			{#if mode === 'moodboard'}
 				<MoodboardGrid
