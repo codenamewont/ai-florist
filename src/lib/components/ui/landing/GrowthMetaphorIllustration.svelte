@@ -1,19 +1,38 @@
 <script>
+	import { onMount } from 'svelte';
 	import {
+		LANDING_CYCLE_MS,
 		LANDING_GROWTH_STAGES,
 		LANDING_STAGE_REVEAL_MS
 	} from '$lib/landing/landingGrowthStages.js';
+
+	let cycle = $state(0);
+	let reducedMotion = $state(false);
+
+	onMount(() => {
+		reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (reducedMotion) return;
+
+		const timer = window.setInterval(() => {
+			cycle += 1;
+		}, LANDING_CYCLE_MS);
+
+		return () => {
+			window.clearInterval(timer);
+		};
+	});
 </script>
 
 <div class="growth-metaphor w-full" aria-hidden="true">
 	<div class="flex w-full items-end justify-between gap-2 sm:gap-4">
-		{#each LANDING_GROWTH_STAGES as stage (stage.id)}
+		{#each LANDING_GROWTH_STAGES as stage (`${cycle}-${stage.id}`)}
 			<img
 				src={stage.src}
 				alt=""
 				class={[
-					'stage-reveal w-auto shrink-0 object-contain object-bottom',
-					stage.heightClass
+					'w-auto shrink-0 object-contain object-bottom',
+					stage.heightClass,
+					reducedMotion ? 'opacity-100' : 'stage-reveal'
 				]}
 				style={`--stage-delay: ${stage.delayMs}ms; --stage-duration: ${LANDING_STAGE_REVEAL_MS}ms;`}
 			/>
@@ -35,14 +54,6 @@
 		to {
 			opacity: 1;
 			transform: translateY(0);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.stage-reveal {
-			opacity: 1;
-			transform: none;
-			animation: none;
 		}
 	}
 </style>

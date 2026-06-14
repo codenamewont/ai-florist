@@ -11,4 +11,12 @@ export const LANDING_GROWTH_STAGES = [
 	{ id: 'bouquet', src: bouquetSrc, heightClass: 'h-36 sm:h-44 lg:h-52', delayMs: 1560 }
 ];
 
+export const LANDING_STAGE_GAP_MS = 520;
 export const LANDING_STAGE_REVEAL_MS = 680;
+export const LANDING_CYCLE_HOLD_MS = 3000;
+
+const lastStage = LANDING_GROWTH_STAGES[LANDING_GROWTH_STAGES.length - 1];
+
+/** 4단계 reveal 완료 + hold 후 다음 사이클까지 */
+export const LANDING_CYCLE_MS =
+	lastStage.delayMs + LANDING_STAGE_REVEAL_MS + LANDING_CYCLE_HOLD_MS;
