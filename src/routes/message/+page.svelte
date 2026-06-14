@@ -6,6 +6,9 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MessageForm from '$lib/components/ui/message/MessageForm.svelte';
+	import FlowContinueBar, {
+		FLOW_CONTINUE_BUTTON
+	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import { skipDevImages } from '$lib/flowerFlow/devSeed.js';
 	import {
 		consumeDevMessageSnapshot,
@@ -106,12 +109,12 @@
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
 
-		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
-			<MessageForm bind:message />
+		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
+			<div class="min-h-0 flex-1 overflow-y-auto">
+				<MessageForm bind:message />
+			</div>
 
-			<div
-				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 px-4 pb-5 lg:absolute lg:right-8 lg:bottom-8 lg:left-auto lg:w-72 lg:px-0"
-			>
+			<FlowContinueBar>
 				{#if error}
 					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
 						{error}
@@ -122,20 +125,16 @@
 						type="button"
 						disabled={skipping}
 						onclick={skipWithDummyImages}
-						class="w-full rounded border border-dashed border-subtle/60 px-4 py-2.5 text-xs text-muted hover:border-subtle hover:text-ink disabled:opacity-50"
+						class="w-full rounded border border-dashed border-subtle/60 px-4 py-2.5 text-xs text-muted hover:border-subtle hover:text-ink disabled:opacity-50 lg:w-auto"
 						title="AI 생성 없이 더미 이미지로 edit로 이동 (개발용)"
 					>
 						{skipping ? 'Skipping…' : 'Dev: Skip to edit (dummy images)'}
 					</button>
 				{/if}
-				<button
-					type="button"
-					onclick={handleContinue}
-					class="w-full bg-pill px-4 py-3 text-sm text-surface"
-				>
-					Continue to generating
+				<button type="button" onclick={handleContinue} class={FLOW_CONTINUE_BUTTON}>
+					Continue to generating ->
 				</button>
-			</div>
+			</FlowContinueBar>
 		</section>
 	</main>
 </div>

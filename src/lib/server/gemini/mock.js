@@ -21,9 +21,30 @@ export function mockRecipe(userInput = {}) {
 		? `around ₩${userInput.budget.toLocaleString('en-US')}`
 		: 'around ₩50,000';
 
+	const notes = userInput.notes?.toLowerCase() ?? '';
+
+	/** @type {string[]} */
+	let mainFlowers = ['Pink tulip'];
+	/** @type {string} */
+	let concept = 'Soft Romantic Tulip Bouquet';
+
+	if (/love|사랑/.test(notes)) {
+		mainFlowers = ['Red rose'];
+		concept = 'Romantic Rose Bouquet';
+	} else if (/thank|grateful|감사/.test(notes)) {
+		mainFlowers = ['Dahlia'];
+		concept = 'Grateful Dahlia Bouquet';
+	} else if (/proud|congratul/.test(notes)) {
+		mainFlowers = ['Sunflower'];
+		concept = 'Celebratory Sunflower Bouquet';
+	} else if (/birthday|happy/.test(notes)) {
+		mainFlowers = ['Gerbera'];
+		concept = 'Cheerful Gerbera Bouquet';
+	}
+
 	return {
-		concept: 'Soft Romantic Tulip Bouquet',
-		mainFlowers: ['Pink tulip'],
+		concept,
+		mainFlowers,
 		subFlowers: ["Baby's breath", 'Seasonal white flowers'],
 		greenery: ['Eucalyptus'],
 		colors: ['pale pink', 'ivory', 'soft green'],
@@ -41,7 +62,8 @@ export function mockImagePrompt(recipe) {
 		`Use ${recipe.mainFlowers.join(', ')} as the main flower, mixed with ${recipe.subFlowers.join(', ')}, and ${recipe.greenery.join(', ')}.`,
 		`Use a ${recipe.colors.join(', ')} color palette.`,
 		`Wrap it with ${recipe.wrapping}.`,
-		'White background, soft natural lighting, Korean florist style.'
+		'White background, soft natural lighting, Korean florist style.',
+		'Vertical portrait composition with a 3:4 aspect ratio (width:height). Frame the full bouquet without cropping.'
 	].join(' ');
 }
 
@@ -62,4 +84,48 @@ export function mockGeneratedImage(label = 'Bouquet') {
 /** @param {BouquetRecipe} recipe */
 export function mockFloristNote(recipe) {
 	return `A ${recipe.shape} built around ${recipe.mainFlowers.join(' and ')}, softened with ${recipe.subFlowers.join(', ')} and ${recipe.greenery.join(', ')}. The palette stays ${recipe.colors.join(', ')} with ${recipe.wrapping}. Budget target: ${recipe.budget}.`;
+}
+
+/**
+ * Apply a simple swap edit to the recipe in mock mode (e.g. "change tulip to rose").
+ * @param {BouquetRecipe} recipe
+ * @param {string} editPrompt
+ * @returns {BouquetRecipe}
+ */
+export function mockApplyRecipeEdit(recipe, editPrompt) {
+	/** @type {BouquetRecipe} */
+	const updated = structuredClone(recipe);
+	const lower = editPrompt.toLowerCase();
+
+	const swapMatch =
+		lower.match(/(?:change|replace|swap)\s+(.+?)\s+(?:to|with|into)\s+(.+)/) ??
+		lower.match(/(.+?)\s+(?:to|into)\s+(.+)/);
+
+	if (!swapMatch) return updated;
+
+	const fromToken = swapMatch[1].trim().replace(/[.!?]$/, '');
+	const toToken = swapMatch[2].trim().replace(/[.!?]$/, '');
+	if (!fromToken || !toToken) return updated;
+
+	/** @param {string[]} labels */
+	const replaceInList = (labels) =>
+		labels.map((label) => {
+			if (!label.toLowerCase().includes(fromToken)) return label;
+
+			const colorPrefix = label.match(/^(\w+)\s+/i)?.[1];
+			const capitalizedTo =
+				toToken.charAt(0).toUpperCase() + toToken.slice(1).toLowerCase();
+
+			if (colorPrefix && !fromToken.includes(' ')) {
+				return `${colorPrefix} ${capitalizedTo}`;
+			}
+
+			return label.replace(new RegExp(fromToken, 'i'), capitalizedTo);
+		});
+
+	updated.mainFlowers = replaceInList(updated.mainFlowers);
+	updated.subFlowers = replaceInList(updated.subFlowers);
+	updated.greenery = replaceInList(updated.greenery);
+
+	return updated;
 }

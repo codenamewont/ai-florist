@@ -3,6 +3,7 @@
 /** @typedef {import('../flowerFlow/jobStore.js').UserInput} UserInput */
 
 import { matchFlowersFromMood } from '../flowerFlow/flowerDB.js';
+import { BOUQUET_IMAGE_ASPECT_PROMPT } from '../../flowerFlow/bouquetImageFormat.js';
 import { getTextModel, isGeminiConfigured, parseJsonFromText } from './client.js';
 import { mockRecipe } from './mock.js';
 
@@ -54,6 +55,7 @@ Return JSON only:
 
 Rules:
 - Use ONLY exact candidate names from the lists above. Do not invent, rename, or substitute flowers.
+- If userInput.notes contains a card message, choose mainFlowers whose wordOfFlower (on each candidate) best matches what the card message says. Flower language fit for the message is the top priority for mainFlowers when a card message exists.
 - mainFlowers must come from candidates.main only (1-2 items).
 - subFlowers must combine candidates.filler and/or candidates.line only (2-4 items total).
 - greenery must come from candidates.foliage only (1-2 items).
@@ -90,7 +92,8 @@ Rules:
 - White background, soft natural lighting
 - Korean florist style
 - Describe bouquet composition only (flower types, colors, wrapping, mood)
-- Do NOT specify alternate size variants — generate one final customer preview image
+- ${BOUQUET_IMAGE_ASPECT_PROMPT}
+- Do NOT specify alternate size variants; generate one final customer preview image
 - Return plain text only, no markdown`;
 
 	const result = await model.generateContent(prompt);
@@ -118,4 +121,47 @@ Return plain text only.`;
 
 	const result = await model.generateContent(prompt);
 	return result.response.text().trim();
+}
+
+/**
+ * Update a bouquet recipe to reflect a customer edit request.
+ * @param {BouquetRecipe} recipe
+ * @param {string} editPrompt
+ * @returns {Promise<BouquetRecipe>}
+ */
+export async function applyRecipeEdit(recipe, editPrompt) {
+	if (!isGeminiConfigured()) {
+		const { mockApplyRecipeEdit } = await import('./mock.js');
+		return mockApplyRecipeEdit(recipe, editPrompt);
+	}
+
+	const model = getTextModel();
+	const prompt = `You are a professional florist assistant.
+Update this bouquet recipe so it matches the customer's edit request.
+
+Current recipe:
+${JSON.stringify(recipe, null, 2)}
+
+Edit request:
+${editPrompt}
+
+Return JSON only with the same schema:
+{
+  "concept": string,
+  "mainFlowers": string[],
+  "subFlowers": string[],
+  "greenery": string[],
+  "colors": string[],
+  "wrapping": string,
+  "shape": string,
+  "budget": string
+}
+
+Rules:
+- Change only what the edit request implies; keep unrelated fields the same.
+- Use realistic florist flower names.
+- mainFlowers, subFlowers, and greenery must stay consistent with the edit.`;
+
+	const result = await model.generateContent(prompt);
+	return /** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text()));
 }

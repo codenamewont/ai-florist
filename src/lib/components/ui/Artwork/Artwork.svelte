@@ -33,7 +33,7 @@
 					<img
 						src={imageSrc}
 						alt="Selected bouquet"
-						class="aspect-[3/4] h-auto w-full object-cover"
+						class="aspect-[3/4] h-auto w-full object-contain object-center"
 					/>
 				</div>
 			{:else}

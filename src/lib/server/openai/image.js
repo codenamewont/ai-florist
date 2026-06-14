@@ -27,7 +27,7 @@ export async function generateOpenAIImage(prompt) {
 	const response = await getOpenAIClient().images.generate({
 		model: env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
 		prompt,
-		size: env.OPENAI_IMAGE_SIZE || '1024x1024',
+		size: env.OPENAI_IMAGE_SIZE || '1024x1536',
 		n: 1
 	});
 

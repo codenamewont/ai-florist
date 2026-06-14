@@ -42,7 +42,7 @@
 				{/if}
 			</h1>
 			<p class="text-sm text-muted">
-				{style ?? '—'} | ₩{budget.toLocaleString('ko-KR')}
+				{style ?? '...'} | ₩{budget.toLocaleString('ko-KR')}
 			</p>
 		{/if}
 	</header>

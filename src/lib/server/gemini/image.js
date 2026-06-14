@@ -1,6 +1,7 @@
 /** @typedef {import('../flowerFlow/jobStore.js').GeneratedImage} GeneratedImage */
 
 import { env } from '$env/dynamic/private';
+import { BOUQUET_IMAGE_ASPECT_PROMPT } from '../../flowerFlow/bouquetImageFormat.js';
 import { getImageModel, isGeminiConfigured } from './client.js';
 import { mockGeneratedImage } from './mock.js';
 import { generateOpenAIImage, isOpenAIConfigured } from '../openai/image.js';
@@ -26,8 +27,8 @@ export function isImageGenerationConfigured() {
  */
 export async function generateBouquetImage(basePrompt, options = {}) {
 	const suffix = options.edit
-		? 'Generate exactly one edited bouquet image. Show a single bouquet only, centered in frame. Do not show two bouquets, no side-by-side comparison, no before/after layout, and no duplicate arrangements. Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.'
-		: 'Generate one final bouquet image. Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.';
+		? `Generate exactly one edited bouquet image. Show a single bouquet only, centered in frame. Do not show two bouquets, no side-by-side comparison, no before/after layout, and no duplicate arrangements. ${BOUQUET_IMAGE_ASPECT_PROMPT} Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.`
+		: `Generate one final bouquet image. ${BOUQUET_IMAGE_ASPECT_PROMPT} Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.`;
 	const prompt = `${basePrompt}\n\n${suffix}`;
 	const provider = getImageProvider();
 

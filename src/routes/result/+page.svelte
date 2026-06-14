@@ -3,15 +3,28 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
+	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
+	import BouquetFlowerCarousel from '$lib/components/ui/result/BouquetFlowerCarousel.svelte';
+	import FlowContinueBar, {
+		FLOW_CONTINUE_BUTTON
+	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import { fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
+	import { getFlowerImageSrc } from '$lib/flowerFlow/flowerImagePaths.js';
+	import { resolveRecipeFlowers, buildBouquetRationale, buildBriefBouquetTitle } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 	import { getFlowString } from '$lib/flowerFlow/session.js';
 
 	let loading = $state(true);
 	let error = $state('');
 	let selectedImage = $state(null);
-	let floristNote = $state('');
 	let recipe = $state(null);
+	let moodAnalysis = $state(null);
+	let userInput = $state(null);
 	let mock = $state(false);
+
+	const artworkTitle = $derived(buildBriefBouquetTitle(moodAnalysis));
+	const artworkDescription = $derived(buildBouquetRationale(moodAnalysis, userInput, recipe));
+	const bouquetImageSrc = $derived(selectedImage ? toDataUrl(selectedImage) : null);
+	const bouquetFlowers = $derived(resolveRecipeFlowers(recipe, getFlowerImageSrc));
 
 	onMount(async () => {
 		const jobId = getFlowString('jobId');
@@ -24,8 +37,9 @@
 		try {
 			const job = await fetchJob(jobId);
 			selectedImage = job.images?.primary ?? null;
-			floristNote = job.floristNote ?? '';
 			recipe = job.recipe ?? null;
+			moodAnalysis = job.moodAnalysis ?? null;
+			userInput = job.userInput ?? null;
 			mock = Boolean(job.mock);
 			loading = false;
 		} catch (err) {
@@ -35,61 +49,41 @@
 	});
 </script>
 
-<div class="min-h-dvh bg-surface text-ink">
+<div
+	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
+>
 	<Header step={6} total={7} />
 
-	<main class="mx-auto max-w-5xl px-6 py-10">
-		<h1 class="mb-2 text-2xl">Result</h1>
-		<p class="mb-8 text-sm text-muted">Your selected bouquet and florist note.</p>
+	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
+		<Artwork
+			variant="generated"
+			title={artworkTitle}
+			description={artworkDescription}
+			imageSrc={bouquetImageSrc}
+		/>
 
-		{#if loading}
-			<p class="text-sm text-muted">Loading result...</p>
-		{:else if error}
-			<p class="text-sm text-red-600">{error}</p>
-		{:else}
-			{#if mock}
-				<p class="mb-4 text-sm text-muted">Running in mock mode (no Gemini API key).</p>
-			{/if}
-
-			<div class="grid gap-8 lg:grid-cols-2">
-				<div class="aspect-[3/4] overflow-hidden bg-track">
-					{#if selectedImage}
-						<img
-							src={toDataUrl(selectedImage)}
-							alt="Selected bouquet"
-							class="h-full w-full object-cover"
-						/>
-					{/if}
-				</div>
-
-				<div class="space-y-6">
-					<div>
-						<h2 class="mb-2 text-lg">Florist note</h2>
-						<p class="text-sm leading-relaxed text-muted">{floristNote}</p>
-					</div>
-
-					{#if recipe}
-						<div>
-							<h2 class="mb-2 text-lg">Recipe</h2>
-							<ul class="space-y-1 text-sm text-muted">
-								<li><strong>Concept:</strong> {recipe.concept}</li>
-								<li><strong>Main:</strong> {recipe.mainFlowers?.join(', ')}</li>
-								<li><strong>Sub:</strong> {recipe.subFlowers?.join(', ')}</li>
-								<li><strong>Greenery:</strong> {recipe.greenery?.join(', ')}</li>
-								<li><strong>Wrapping:</strong> {recipe.wrapping}</li>
-							</ul>
-						</div>
+		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
+			<div class="flex min-h-0 flex-1 flex-col justify-center overflow-hidden px-6 py-6 lg:px-8 lg:py-8">
+				{#if loading}
+					<p class="text-sm text-muted">Loading result...</p>
+				{:else if error}
+					<p class="text-sm text-red-600">{error}</p>
+				{:else}
+					{#if mock}
+						<p class="mb-6 text-sm text-muted">Running in mock mode (no Gemini API key).</p>
 					{/if}
 
-					<button
-						type="button"
-						class="bg-pill px-4 py-2 text-sm text-surface"
-						onclick={() => goto(resolve('/map'))}
-					>
-						Continue to map
-					</button>
-				</div>
+					<BouquetFlowerCarousel flowers={bouquetFlowers} />
+				{/if}
 			</div>
-		{/if}
+
+			{#if !loading && !error}
+				<FlowContinueBar>
+					<button type="button" onclick={() => goto(resolve('/map'))} class={FLOW_CONTINUE_BUTTON}>
+						Continue to map ->
+					</button>
+				</FlowContinueBar>
+			{/if}
+		</section>
 	</main>
 </div>

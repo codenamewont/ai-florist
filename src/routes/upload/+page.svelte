@@ -5,6 +5,9 @@
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MoodboardGrid from '$lib/components/ui/upload/MoodboardGrid.svelte';
 	import SnsFeedUpload from '$lib/components/ui/upload/SnsFeedUpload.svelte';
+	import FlowContinueBar, {
+		FLOW_CONTINUE_BUTTON
+	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import { analyzeMood } from '$lib/flowerFlow/api.js';
 	import {
 		deleteFlowKey,
@@ -193,25 +196,53 @@
 		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
 
 		<section
-			class="relative flex min-h-0 flex-1 flex-col pt-6 pb-[4.75rem] lg:grid lg:grid-rows-[minmax(0,1fr)_auto] lg:overflow-hidden lg:pt-8 lg:pb-8"
+			class="relative flex min-h-0 flex-1 flex-col pt-4 pb-[3.75rem] lg:grid lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:overflow-hidden lg:pt-6 lg:pb-8"
 		>
+			<div class="mb-3 flex shrink-0 justify-center px-4 lg:mb-4 lg:px-6">
+				<div
+					class="relative grid w-full max-w-[15rem] grid-cols-2 items-center rounded-full bg-white p-1 shadow-md ring-1 ring-black/5"
+					role="tablist"
+					aria-label="Upload mode"
+				>
+					<span
+						class="pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-pill transition-transform duration-300 ease-out motion-reduce:transition-none"
+						style:transform={mode === 'moodboard' ? 'translateX(100%)' : 'translateX(0)'}
+						aria-hidden="true"
+					></span>
+					<button
+						type="button"
+						role="tab"
+						aria-selected={mode === 'sns'}
+						onclick={() => (mode = 'sns')}
+						class={[
+							'relative z-10 w-full rounded-full px-2 py-1.5 text-center text-xs whitespace-nowrap transition-colors',
+							mode === 'sns' ? 'text-surface' : 'text-muted hover:text-ink'
+						]}
+					>
+						SNS Feed
+					</button>
+					<button
+						type="button"
+						role="tab"
+						aria-selected={mode === 'moodboard'}
+						onclick={() => (mode = 'moodboard')}
+						class={[
+							'relative z-10 w-full rounded-full px-2 py-1.5 text-center text-xs whitespace-nowrap transition-colors',
+							mode === 'moodboard' ? 'text-surface' : 'text-muted hover:text-ink'
+						]}
+					>
+						Moodboard
+					</button>
+				</div>
+			</div>
+
 			{#if mode === 'moodboard'}
-				<MoodboardGrid
-					bind:primaryFile
-					bind:uploadedTiles={moodboardTiles}
-					caption={`build ${recipientPronoun} moodboard!`}
-				/>
+				<MoodboardGrid bind:primaryFile bind:uploadedTiles={moodboardTiles} />
 			{:else}
-				<SnsFeedUpload
-					bind:primaryFile
-					bind:hasImage={snsHasImage}
-					caption={`upload ${recipientPronoun} feed!`}
-				/>
+				<SnsFeedUpload bind:primaryFile bind:hasImage={snsHasImage} />
 			{/if}
 
-			<div
-				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 px-4 pb-5 lg:static lg:mx-auto lg:flex lg:w-full lg:max-w-2xl lg:items-center lg:gap-3 lg:space-y-0 lg:px-6 lg:pb-0"
-			>
+			<FlowContinueBar>
 				{#if error}
 					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
 						{error}
@@ -222,42 +253,11 @@
 					type="button"
 					disabled={loading}
 					onclick={continueToMessage}
-					class="w-full px-2 py-3 text-sm whitespace-nowrap text-ink underline-offset-4 hover:underline disabled:opacity-50 lg:order-2 lg:w-auto"
+					class={FLOW_CONTINUE_BUTTON}
 				>
 					{loading ? 'Analyzing mood...' : 'Continue to message ->'}
 				</button>
-
-				<div
-					class="relative grid w-full grid-cols-2 items-center rounded-full bg-white p-1.5 shadow-xl ring-1 ring-black/5 lg:order-1 lg:flex-1"
-				>
-					<!-- sliding dark thumb: covers one cell, glides to the active one -->
-					<span
-						class="pointer-events-none absolute inset-y-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-full bg-pill transition-transform duration-300 ease-out motion-reduce:transition-none"
-						style:transform={mode === 'moodboard' ? 'translateX(100%)' : 'translateX(0)'}
-						aria-hidden="true"
-					></span>
-					<button
-						type="button"
-						onclick={() => (mode = 'sns')}
-						class={[
-							'relative z-10 w-full rounded-full px-3 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
-							mode === 'sns' ? 'text-surface' : 'text-muted hover:text-ink'
-						]}
-					>
-						Upload SNS Feed
-					</button>
-					<button
-						type="button"
-						onclick={() => (mode = 'moodboard')}
-						class={[
-							'relative z-10 w-full rounded-full px-3 py-2.5 text-center text-sm whitespace-nowrap transition-colors',
-							mode === 'moodboard' ? 'text-surface' : 'text-muted hover:text-ink'
-						]}
-					>
-						Build Moodboard
-					</button>
-				</div>
-			</div>
+			</FlowContinueBar>
 		</section>
 	</main>
 </div>
