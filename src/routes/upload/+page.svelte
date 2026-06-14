@@ -24,10 +24,20 @@
 			: 'moodboard'
 	);
 	let primaryFile = $state(null);
-	let filledCount = $state(0);
-	let allFilled = $state(false);
+	let moodboardTiles = $state({
+		color: false,
+		season: false,
+		character: false,
+		location: false
+	});
+	let snsHasImage = $state(false);
 	let loading = $state(false);
 	let error = $state('');
+
+	const recipientLabel = $derived.by(() => {
+		const who = typeof userInput.relationship === 'string' ? userInput.relationship : '';
+		return who ? who.toLowerCase() : 'them';
+	});
 
 	const recipientPronoun = $derived.by(() => {
 		const style = typeof userInput.style === 'string' ? userInput.style.toLowerCase() : '';
@@ -36,35 +46,97 @@
 		return 'their';
 	});
 
-	const hasUserContext = $derived(
-		Boolean(userInput.relationship || userInput.occasion || userInput.style)
-	);
+	const MOODBOARD_TILE_COPY = {
+		color: {
+			title: 'A hint of color',
+			description:
+				'The first thread pulled. Warm or cool, bold or shy. Their palette begins to speak.'
+		},
+		season: {
+			title: 'Season in the air',
+			description: 'Spring lightness or winter hush. Time of year will breathe through the bouquet.'
+		},
+		character: {
+			title: 'Their character',
+			description: 'A face, a gesture, a presence. Something in them is starting to take floral form.'
+		},
+		location: {
+			title: 'A sense of place',
+			description:
+				'City grit or quiet coast. Where they belong roots the arrangement in memory.'
+		}
+	};
 
-	const artworkTitle = $derived.by(() => {
-		const who = userInput.relationship;
-		const whatFor = userInput.occasion;
-		if (!hasUserContext) return 'Title';
-		const occasion = whatFor ? `A ${whatFor} bouquet for` : 'A bouquet for';
-		return `${occasion} ${who ?? '...'}`;
+	const artworkCopy = $derived.by(() => {
+		if (mode === 'sns') {
+			if (snsHasImage) {
+				return {
+					title: 'Feed captured',
+					description:
+						'We will look at the photos and colors in their feed to sense what kind of bouquet fits them.'
+				};
+			}
+
+			return {
+				title: 'Their social world',
+				description: `Upload a screenshot of ${recipientPronoun} feed. One glance is often enough to sense the mood.`
+			};
+		}
+
+		const uploaded = /** @type {const} */ (['color', 'season', 'character', 'location']).filter(
+			(key) => moodboardTiles[key]
+		);
+		const count = uploaded.length;
+
+		if (count === 0) {
+			return {
+				title: 'Gather their mood',
+				description: `Four small glimpses of color, season, character, and place. Together they become the palette for a bouquet made for ${recipientLabel}.`
+			};
+		}
+
+		if (count === 1) {
+			return MOODBOARD_TILE_COPY[uploaded[0]];
+		}
+
+		if (count === 4) {
+			return {
+				title: 'A moodboard whole',
+				description:
+					'Color, season, character, and place. The collage is complete, and their bouquet is ready to take shape.'
+			};
+		}
+
+		if (count === 2) {
+			return {
+				title: 'Taking shape',
+				description:
+					'The moodboard is finding its rhythm. Keep adding. Each image is another note in their story.'
+			};
+		}
+
+		return {
+			title: 'Almost there',
+			description: 'One last glimpse and their world will be fully gathered on the page.'
+		};
 	});
 
-	const artworkDescription = $derived(
-		hasUserContext
-			? `${userInput.style ?? '—'} style · ₩${Number(userInput.budget ?? 50_000).toLocaleString('ko-KR')} budget`
-			: 'Description Description Description'
-	);
+	const artworkTitle = $derived(artworkCopy.title);
+	const artworkDescription = $derived(artworkCopy.description);
 
 	/** create2(시작) → upload1(1장+) → upload2(전체 채움) */
 	const artworkVariant = $derived.by(() => {
-		if (allFilled) return 'upload2';
-		if (filledCount > 0) return 'upload1';
-		return 'create2';
-	});
+		if (mode === 'sns') {
+			if (snsHasImage) return 'upload2';
+			return 'create2';
+		}
 
-	$effect(() => {
-		void mode;
-		filledCount = 0;
-		allFilled = false;
+		const count = ['color', 'season', 'character', 'location'].filter(
+			(key) => moodboardTiles[key]
+		).length;
+		if (count === 4) return 'upload2';
+		if (count > 0) return 'upload1';
+		return 'create2';
 	});
 
 	async function continueToMessage() {
@@ -126,15 +198,13 @@
 			{#if mode === 'moodboard'}
 				<MoodboardGrid
 					bind:primaryFile
-					bind:filledCount
-					bind:allFilled
+					bind:uploadedTiles={moodboardTiles}
 					caption={`build ${recipientPronoun} moodboard!`}
 				/>
 			{:else}
 				<SnsFeedUpload
 					bind:primaryFile
-					bind:filledCount
-					bind:allFilled
+					bind:hasImage={snsHasImage}
 					caption={`upload ${recipientPronoun} feed!`}
 				/>
 			{/if}

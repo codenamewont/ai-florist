@@ -4,7 +4,8 @@
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
 
-	let { primaryFile = $bindable(null), caption = 'upload their feed!', filledCount = $bindable(0), allFilled = $bindable(false) } = $props();
+	let { primaryFile = $bindable(null), hasImage = $bindable(), caption = 'upload their feed!' } =
+		$props();
 
 	let firstFile = $state(null);
 
@@ -14,8 +15,8 @@
 	});
 
 	$effect(() => {
-		filledCount = firstFile ? 1 : 0;
-		allFilled = Boolean(firstFile);
+		const next = !!firstFile;
+		if (hasImage !== next) hasImage = next;
 	});
 
 	onMount(async () => {

@@ -32,7 +32,9 @@ function describeEditInstruction(instruction) {
 		'EDIT REQUEST:',
 		instruction.prompt,
 		'',
-		'Preserve the same bouquet concept, camera angle, background, wrapping style, and realistic florist photography unless the edit request explicitly says otherwise.'
+		'This is a refinement of one existing bouquet photo, not a new collage.',
+		'Preserve the same bouquet concept, camera angle, background, wrapping style, and realistic florist photography unless the edit request explicitly says otherwise.',
+		'Output exactly one bouquet in a single composition. Never show two bouquets, side-by-side views, comparison panels, or duplicated arrangements.'
 	];
 
 	if (instruction.mode === 'area') {
@@ -78,7 +80,7 @@ export async function POST({ request }) {
 		console.log(
 			`[flower-flow] edit-images job=${jobId.slice(0, 8)} provider=${getImageProvider()} mode=${mode} → generating...`
 		);
-		const generatedImage = await generateBouquetImage(editPrompt);
+		const generatedImage = await generateBouquetImage(editPrompt, { edit: true });
 		const images = await uploadGeneratedImages(
 			jobId,
 			generatedImage,
