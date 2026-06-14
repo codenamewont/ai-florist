@@ -177,10 +177,7 @@
 	}
 
 	.mood-caption {
-		/* horizontally centered over the toggle capsule (the left flex child of
-		   the bottom bar), not the section. Its center sits left of the collage
-		   midpoint because the "Continue" button occupies the bar's right side. */
-		left: 29%;
+		left: 50%;
 		top: 84%;
 		font-size: clamp(0.85rem, 1.7vw, 1.1rem);
 		transform: translateX(-50%);
@@ -190,7 +187,7 @@
 	@media (max-width: 767px) {
 		.moodboard {
 			align-items: flex-start;
-			padding: 1.5rem 1rem 7rem;
+			padding: 0.75rem 1rem 5.5rem;
 		}
 
 		.collage {

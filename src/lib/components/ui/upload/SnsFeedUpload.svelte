@@ -98,7 +98,7 @@
 	@media (max-width: 767px) {
 		.feed {
 			align-items: flex-start;
-			padding: 1.5rem 1rem 7rem;
+			padding: 0.75rem 1rem 5.5rem;
 		}
 
 		.sns-collage {
