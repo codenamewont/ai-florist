@@ -64,19 +64,18 @@
 	.moodboard {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.75rem;
-		align-content: center;
+		grid-template-rows: repeat(2, minmax(0, 1fr));
+		gap: 1.25rem;
 		width: 100%;
 		max-width: 32rem;
+		height: 100%;
 		margin: 0 auto;
-		padding: 0.75rem 1.5rem 1rem;
-		overflow-y: auto;
+		padding: 0.75rem 1.5rem 0;
 	}
 
-	:global(.tile-color),
-	:global(.tile-season),
-	:global(.tile-character),
-	:global(.tile-location) {
-		aspect-ratio: 3 / 4;
+	.moodboard :global(.tile) {
+		min-height: 0;
+		height: 100%;
+		width: 100%;
 	}
 </style>

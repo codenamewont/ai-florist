@@ -5,6 +5,9 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import ContextForm from '$lib/components/ui/create/ContextForm.svelte';
+	import FlowContinueBar, {
+		FLOW_CONTINUE_BUTTON
+	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import {
 		consumeDevCreateSnapshot,
 		deleteFlowKey,
@@ -86,20 +89,16 @@
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
 
-		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
-			<ContextForm bind:who bind:whatFor bind:style bind:budget />
-
-			<div
-				class="fixed right-0 bottom-0 left-0 z-20 px-4 pb-5 lg:absolute lg:right-8 lg:bottom-8 lg:left-auto lg:w-72 lg:px-0"
-			>
-				<button
-					type="button"
-					onclick={handleContinue}
-					class="w-full bg-pill px-4 py-3 text-sm text-surface"
-				>
-					Continue to upload
-				</button>
+		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
+			<div class="min-h-0 flex-1 overflow-y-auto">
+				<ContextForm bind:who bind:whatFor bind:style bind:budget />
 			</div>
+
+			<FlowContinueBar>
+				<button type="button" onclick={handleContinue} class={FLOW_CONTINUE_BUTTON}>
+					Continue to upload ->
+				</button>
+			</FlowContinueBar>
 		</section>
 	</main>
 </div>

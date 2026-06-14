@@ -5,6 +5,9 @@
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MoodboardGrid from '$lib/components/ui/upload/MoodboardGrid.svelte';
 	import SnsFeedUpload from '$lib/components/ui/upload/SnsFeedUpload.svelte';
+	import FlowContinueBar, {
+		FLOW_CONTINUE_BUTTON
+	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import { analyzeMood } from '$lib/flowerFlow/api.js';
 	import {
 		deleteFlowKey,
@@ -239,9 +242,7 @@
 				<SnsFeedUpload bind:primaryFile bind:hasImage={snsHasImage} />
 			{/if}
 
-			<div
-				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 px-4 pb-5 lg:static lg:flex lg:justify-end lg:px-6 lg:pb-0"
-			>
+			<FlowContinueBar>
 				{#if error}
 					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
 						{error}
@@ -252,11 +253,11 @@
 					type="button"
 					disabled={loading}
 					onclick={continueToMessage}
-					class="w-full px-2 py-3 text-sm whitespace-nowrap text-ink underline-offset-4 hover:underline disabled:opacity-50 lg:w-auto"
+					class={FLOW_CONTINUE_BUTTON}
 				>
 					{loading ? 'Analyzing mood...' : 'Continue to message ->'}
 				</button>
-			</div>
+			</FlowContinueBar>
 		</section>
 	</main>
 </div>

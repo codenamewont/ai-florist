@@ -1,4 +1,5 @@
 <script>
+	import { resolve } from '$app/paths';
 	import logoUrl from '$lib/assets/logo.svg';
 
 	// `step` is 1-based; the matching dot is highlighted as the current step.
@@ -8,10 +9,14 @@
 </script>
 
 <header class="flex items-center justify-between border-b border-line px-6 py-5 md:px-10">
-	<div class="flex items-center gap-3">
+	<a
+		href={resolve('/')}
+		class="flex cursor-pointer items-center gap-3"
+		aria-label="AI Florist home"
+	>
 		<img src={logoUrl} alt="" class="size-7 shrink-0 translate-y-px" aria-hidden="true" />
 		<span class="text-lg leading-none tracking-wide">AI Florist</span>
-	</div>
+	</a>
 
 	<div class="flex items-center gap-3 sm:gap-4">
 		{#each dots as dot (dot)}

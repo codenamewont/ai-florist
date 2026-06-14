@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DescriptionCard from '$lib/components/ui/Artwork/DescriptionCard.svelte';
+	import FlowContinueBar, {
+		FLOW_CONTINUE_BUTTON
+	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import Header from '$lib/components/ui/Header.svelte';
 	import { editImages, fetchJob, finalizeJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { getFlowString, saveFlow } from '$lib/flowerFlow/session.js';
@@ -350,9 +353,9 @@
 			</div>
 		</section>
 
-		<section class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+		<section class="relative flex min-h-0 flex-1 flex-col overflow-hidden pb-44 lg:pb-8">
 			<div
-				class="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-5 pb-36 lg:py-6 lg:pb-6"
+				class="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-5 lg:py-6"
 			>
 				<div class="shrink-0">
 					<p class="text-xs tracking-[0.2em] text-muted uppercase">Edit bouquet</p>
@@ -415,16 +418,14 @@
 				</div>
 			</div>
 
-			<div
-				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 border-t border-line/60 bg-surface/95 px-4 pt-3 pb-5 backdrop-blur-sm lg:static lg:mx-auto lg:w-full lg:max-w-2xl lg:border-t-0 lg:bg-transparent lg:px-6 lg:pt-0 lg:pb-6 lg:backdrop-blur-none"
-			>
+			<FlowContinueBar class="lg:mx-auto lg:w-full lg:max-w-2xl">
 				{#if error}
 					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
 						{error}
 					</p>
 				{/if}
 
-				<div class="flex items-center gap-2 rounded-full border border-pill bg-surface py-1.5 pr-1.5 pl-5">
+				<div class="flex w-full items-center gap-2 rounded-full border border-pill bg-surface py-1.5 pr-1.5 pl-5">
 					<textarea
 						bind:value={prompt}
 						rows="1"
@@ -468,17 +469,15 @@
 					</button>
 				</div>
 
-				<div class="flex justify-end">
-					<button
-						type="button"
-						disabled={editing || continuing}
-						onclick={continueToResult}
-						class="px-2 py-2 text-sm whitespace-nowrap text-ink underline-offset-4 hover:underline disabled:opacity-50"
-					>
-						{continuing ? 'Preparing result...' : 'Continue to result ->'}
-					</button>
-				</div>
-			</div>
+				<button
+					type="button"
+					disabled={editing || continuing}
+					onclick={continueToResult}
+					class={FLOW_CONTINUE_BUTTON}
+				>
+					{continuing ? 'Preparing result...' : 'Continue to result ->'}
+				</button>
+			</FlowContinueBar>
 		</section>
 	</main>
 </div>

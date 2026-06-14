@@ -43,13 +43,15 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0.75rem 1.5rem 1rem;
-		overflow-y: auto;
+		height: 100%;
+		padding: 0.75rem 1.5rem 0;
 	}
 
 	.feed :global(.sns-tile) {
-		width: 100%;
-		max-width: 20rem;
+		height: 100%;
+		max-height: 100%;
+		width: auto;
+		max-width: min(20rem, 100%);
 		aspect-ratio: 4 / 5;
 	}
 </style>
