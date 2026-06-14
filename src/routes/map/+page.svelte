@@ -8,6 +8,7 @@
 	import { fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { buildFloristOrderMessage } from '$lib/flowerFlow/buildFloristOrderMessage.js';
 	import { getFlowObject, getFlowString } from '$lib/flowerFlow/session.js';
+	import { ARTWORK_CARD_DEFAULTS } from '$lib/flowerFlow/artworkCardCopy.js';
 
 	const jobId = getFlowString('jobId');
 
@@ -27,9 +28,17 @@
 
 	const sessionUserInput = getFlowObject('userInput') ?? {};
 
-	const artworkTitle = $derived(selectedShopId ? 'Ready to order' : 'Your bouquet');
+	const artworkTitle = $derived(
+		selectedShopId ? 'Ready to order' : ARTWORK_CARD_DEFAULTS.map.title
+	);
 
-	const artworkDescription = $derived(floristNote || 'Your selected bouquet design.');
+	const artworkDescription = $derived(
+		selectedShopId
+			? floristNote || 'Your selected bouquet design.'
+			: ARTWORK_CARD_DEFAULTS.map.description
+	);
+
+	const artworkCardMode = $derived(selectedShopId ? 'summary' : 'instruction');
 
 	const bouquetImageSrc = $derived(selectedImage ? toDataUrl(selectedImage) : null);
 
@@ -98,7 +107,12 @@
 	<Header step={7} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork title={artworkTitle} description={artworkDescription} imageSrc={bouquetImageSrc} />
+		<Artwork
+			title={artworkTitle}
+			description={artworkDescription}
+			imageSrc={bouquetImageSrc}
+			cardMode={artworkCardMode}
+		/>
 
 		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
 			<MapPanel

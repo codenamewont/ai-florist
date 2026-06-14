@@ -127,6 +127,15 @@
 	const artworkTitle = $derived(artworkCopy.title);
 	const artworkDescription = $derived(artworkCopy.description);
 
+	const artworkCardMode = $derived.by(() => {
+		if (mode === 'sns') return snsHasImage ? 'summary' : 'instruction';
+
+		const count = ['color', 'season', 'character', 'location'].filter(
+			(key) => moodboardTiles[key]
+		).length;
+		return count === 0 ? 'instruction' : 'summary';
+	});
+
 	/** create2(시작) → upload1(1장+) → upload2(전체 채움) */
 	const artworkVariant = $derived.by(() => {
 		if (mode === 'sns') {
@@ -193,7 +202,12 @@
 	<Header step={2} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
+		<Artwork
+			variant={artworkVariant}
+			title={artworkTitle}
+			description={artworkDescription}
+			cardMode={artworkCardMode}
+		/>
 
 		<section
 			class="relative flex min-h-0 flex-1 flex-col pt-4 pb-[3.75rem] lg:grid lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:overflow-hidden lg:pt-6 lg:pb-8"

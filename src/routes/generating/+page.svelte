@@ -16,6 +16,7 @@
 		loadFlow,
 		saveFlow
 	} from '$lib/flowerFlow/session.js';
+	import { ARTWORK_CARD_DEFAULTS } from '$lib/flowerFlow/artworkCardCopy.js';
 
 	const MAX_RETRIES = 5;
 	const userInput = getFlowUserInput();
@@ -24,12 +25,20 @@
 	const artworkTitle = $derived.by(() => {
 		const who = typeof userInput.relationship === 'string' ? userInput.relationship : null;
 		const whatFor = typeof userInput.occasion === 'string' ? userInput.occasion : null;
-		if (!who && !whatFor) return 'Your bouquet';
+		if (!who && !whatFor) return ARTWORK_CARD_DEFAULTS.generating.title;
 		const occasion = whatFor ? `A ${whatFor} bouquet for` : 'A bouquet for';
 		return `${occasion} ${who ?? '...'}`;
 	});
 
-	const artworkDescription = $derived(cardMessage || '잠시 관리중 ~');
+	const artworkDescription = $derived(
+		cardMessage?.trim() || ARTWORK_CARD_DEFAULTS.generating.description
+	);
+
+	const artworkCardMode = $derived.by(() => {
+		const who = typeof userInput.relationship === 'string' ? userInput.relationship : null;
+		const whatFor = typeof userInput.occasion === 'string' ? userInput.occasion : null;
+		return who || whatFor || cardMessage?.trim() ? 'summary' : 'instruction';
+	});
 
 	/** @type {import('$lib/components/ui/Artwork/artworkVariants.js').ArtworkVariant} */
 	let artworkVariant = $state('create2');
@@ -212,7 +221,13 @@
 	<Header step={4} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork comingSoon variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
+		<Artwork
+			comingSoon
+			variant={artworkVariant}
+			title={artworkTitle}
+			description={artworkDescription}
+			cardMode={artworkCardMode}
+		/>
 
 		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
 			<GenerationActivityFeed

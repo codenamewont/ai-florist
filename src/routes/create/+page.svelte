@@ -15,6 +15,7 @@
 		isDevSeeded,
 		saveFlow
 	} from '$lib/flowerFlow/session.js';
+	import { ARTWORK_CARD_DEFAULTS } from '$lib/flowerFlow/artworkCardCopy.js';
 
 	// 항상 빈 폼으로 시작 — Dev Fill은 onMount에서 1회만 스냅샷 적용
 	let who = $state(null);
@@ -25,7 +26,7 @@
 	const hasAnySelection = $derived(who !== null || whatFor !== null || style !== null);
 
 	const artworkTitle = $derived.by(() => {
-		if (!hasAnySelection) return 'Title';
+		if (!hasAnySelection) return ARTWORK_CARD_DEFAULTS.create.title;
 		const occasion = whatFor ? `A ${whatFor} bouquet for` : 'A bouquet for';
 		return `${occasion} ${who ?? '...'}`;
 	});
@@ -34,9 +35,11 @@
 
 	const artworkDescription = $derived(
 		hasAnySelection
-			? `${style ?? '...'} style · ₩${budget.toLocaleString('ko-KR')} budget`
-			: 'Description Description Description'
+			? `${style ?? '—'} style · ₩${budget.toLocaleString('ko-KR')} budget`
+			: ARTWORK_CARD_DEFAULTS.create.description
 	);
+
+	const artworkCardMode = $derived(hasAnySelection ? 'summary' : 'instruction');
 
 	onMount(() => {
 		const hadSnapshot = !!getFlowObject('devCreateSnapshot');
@@ -87,7 +90,12 @@
 	<Header step={1} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork variant={artworkVariant} title={artworkTitle} description={artworkDescription} />
+		<Artwork
+			variant={artworkVariant}
+			title={artworkTitle}
+			description={artworkDescription}
+			cardMode={artworkCardMode}
+		/>
 
 		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
 			<div class="min-h-0 flex-1 overflow-y-auto">
