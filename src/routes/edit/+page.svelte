@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DescriptionCard from '$lib/components/ui/Artwork/DescriptionCard.svelte';
@@ -26,7 +26,10 @@
 	let recipe = $state(null);
 	let editing = $state(false);
 	let continuing = $state(false);
-	let editHistory = $state([]);
+	/** @type {Array<{ id: string, role: 'user' | 'assistant', prompt?: string, mode?: string, status?: 'pending' | 'done' | 'error', afterImage?: { mimeType: string, base64: string } | null, error?: string }>} */
+	let chatMessages = $state([]);
+	/** @type {HTMLDivElement | null} */
+	let chatScrollEl = $state(null);
 
 	const imageSrc = $derived(toDataUrl(generatedImage));
 	const hasAreaSelection = $derived(selectionPoints.length > 2);
@@ -45,7 +48,28 @@
 	const selectionPolyline = $derived(
 		selectionPoints.map((point) => `${point.x},${point.y}`).join(' ')
 	);
-	const latestEditId = $derived(editHistory[editHistory.length - 1]?.id ?? '');
+	const latestAssistantId = $derived.by(() => {
+		for (let index = chatMessages.length - 1; index >= 0; index -= 1) {
+			const message = chatMessages[index];
+			if (message.role === 'assistant' && message.status === 'done') {
+				return message.id;
+			}
+		}
+
+		return '';
+	});
+
+	async function scrollChatToBottom() {
+		await tick();
+		if (!chatScrollEl) return;
+		chatScrollEl.scrollTop = chatScrollEl.scrollHeight;
+	}
+
+	$effect(() => {
+		chatMessages.length;
+		editing;
+		scrollChatToBottom();
+	});
 
 	/**
 	 * @param {PointerEvent} event
@@ -102,6 +126,13 @@
 		prompt = prompt ? `${prompt}, ${text.toLowerCase()}` : text;
 	}
 
+	/** @param {KeyboardEvent} event */
+	function handlePromptKeydown(event) {
+		if (event.key !== 'Enter' || event.shiftKey) return;
+		event.preventDefault();
+		applyEdit();
+	}
+
 	function getEditInstruction() {
 		if (!prompt.trim()) {
 			error = 'Tell us what to change first.';
@@ -124,30 +155,47 @@
 		const instruction = getEditInstruction();
 		if (!instruction || !jobId) return;
 
-		editing = true;
+		const assistantMessageId = `assistant-${Date.now()}`;
+
+		chatMessages = [
+			...chatMessages,
+			{
+				id: `user-${Date.now()}`,
+				role: 'user',
+				prompt: instruction.prompt,
+				mode: instruction.mode
+			},
+			{
+				id: assistantMessageId,
+				role: 'assistant',
+				status: 'pending'
+			}
+		];
+		prompt = '';
+		cancelAreaSelection();
 		error = '';
+		editing = true;
 
 		try {
 			const result = await editImages(jobId, instruction);
 			const afterImage = result.images?.primary ?? null;
 			generatedImage = afterImage;
-			editHistory = [
-				...editHistory,
-				{
-					id: `${Date.now()}-${editHistory.length}`,
-					instruction,
-					afterImage
-				}
-			];
-			prompt = '';
-			cancelAreaSelection();
+			chatMessages = chatMessages.map((message) =>
+				message.id === assistantMessageId
+					? { ...message, status: 'done', afterImage }
+					: message
+			);
 			saveFlow({
 				editInstruction: instruction,
 				imagePrompt: result.imagePrompt,
 				mock: result.mock
 			});
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Edit failed';
+			const message = err instanceof Error ? err.message : 'Edit failed';
+			chatMessages = chatMessages.map((entry) =>
+				entry.id === assistantMessageId ? { ...entry, status: 'error', error: message } : entry
+			);
+			error = message;
 		} finally {
 			editing = false;
 		}
@@ -303,36 +351,54 @@
 		</section>
 
 		<section class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-			<div class="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-5 lg:py-6">
+			<div
+				class="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-5 pb-36 lg:py-6 lg:pb-6"
+			>
 				<div class="shrink-0">
 					<p class="text-xs tracking-[0.2em] text-muted uppercase">Edit bouquet</p>
 					<h2 class="mt-1 text-lg">Tell us how you want to refine it.</h2>
 				</div>
 
-				<div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+				<div bind:this={chatScrollEl} class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
 					<div class="space-y-2">
 						<p class="text-xs text-muted">Generated image</p>
-						{@render editableImageFrame(initialImage ?? generatedImage, editHistory.length === 0)}
+						{@render editableImageFrame(initialImage ?? generatedImage, chatMessages.length === 0)}
 					</div>
 
-					{#each editHistory as edit (edit.id)}
-						<div class="space-y-4">
+					{#each chatMessages as message (message.id)}
+						{#if message.role === 'user'}
 							<div class="flex justify-end">
 								<div
 									class="max-w-[46%] rounded-3xl bg-pill px-4 py-3 text-sm leading-relaxed text-surface"
 								>
-									<p>{edit.instruction.prompt}</p>
-									{#if edit.instruction.mode === 'area'}
+									<p>{message.prompt}</p>
+									{#if message.mode === 'area'}
 										<p class="mt-2 text-xs opacity-70">Selected area only</p>
 									{/if}
 								</div>
 							</div>
-
+						{:else if message.status === 'pending'}
+							<div class="flex justify-start">
+								<div
+									class="max-w-[46%] rounded-3xl bg-track px-4 py-3 text-sm leading-relaxed text-muted ring-1 ring-black/5"
+								>
+									Editing bouquet image...
+								</div>
+							</div>
+						{:else if message.status === 'error'}
+							<div class="flex justify-start">
+								<div
+									class="max-w-[46%] rounded-3xl bg-surface px-4 py-3 text-sm leading-relaxed text-red-600 ring-1 ring-red-200"
+								>
+									{message.error}
+								</div>
+							</div>
+						{:else}
 							<div class="space-y-2">
-								{@render editableImageFrame(edit.afterImage, edit.id === latestEditId)}
+								{@render editableImageFrame(message.afterImage, message.id === latestAssistantId)}
 								<p class="text-xs text-muted">Result</p>
 							</div>
-						</div>
+						{/if}
 					{/each}
 				</div>
 
@@ -347,49 +413,70 @@
 						</button>
 					{/each}
 				</div>
+			</div>
 
-				<div class="shrink-0 space-y-2">
+			<div
+				class="fixed right-0 bottom-0 left-0 z-20 space-y-2 border-t border-line/60 bg-surface/95 px-4 pt-3 pb-5 backdrop-blur-sm lg:static lg:mx-auto lg:w-full lg:max-w-2xl lg:border-t-0 lg:bg-transparent lg:px-6 lg:pt-0 lg:pb-6 lg:backdrop-blur-none"
+			>
+				{#if error}
+					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
+						{error}
+					</p>
+				{/if}
+
+				<div class="flex items-center gap-2 rounded-full border border-pill bg-surface py-1.5 pr-1.5 pl-5">
 					<textarea
 						bind:value={prompt}
-						rows="2"
+						rows="1"
 						placeholder={hasAreaSelection
 							? 'Tell me how to change the selected area...'
 							: areaSelectionActive
 								? 'Draw on the image, then describe the area...'
 								: 'Tell me how you would like to change your bouquet...'}
-						class="w-full resize-none rounded-[2rem] border border-pill bg-surface px-6 py-3 text-sm outline-none placeholder:text-muted"
+						onkeydown={handlePromptKeydown}
+						class="max-h-24 min-h-6 flex-1 resize-none border-none bg-transparent py-1 text-sm leading-normal outline-none placeholder:text-muted"
 					></textarea>
+
+					<button
+						type="button"
+						aria-label={editing ? 'Applying edit' : 'Send edit'}
+						disabled={!prompt.trim() || editing || continuing}
+						onclick={applyEdit}
+						class="flex size-9 shrink-0 items-center justify-center rounded-full bg-pill text-surface transition-opacity disabled:opacity-40"
+					>
+						{#if editing}
+							<span
+								class="size-4 animate-spin rounded-full border-2 border-surface/30 border-t-surface"
+								aria-hidden="true"
+							></span>
+						{:else}
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								class="size-4"
+								aria-hidden="true"
+							>
+								<path d="M12 19V5" />
+								<path d="m5 12 7-7 7 7" />
+							</svg>
+						{/if}
+					</button>
 				</div>
 
-				<div class="shrink-0 space-y-2">
-					{#if error}
-						<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
-							{error}
-						</p>
-					{:else if editing}
-						<p class="rounded bg-surface/95 px-3 py-2 text-sm text-muted ring-1 ring-black/5">
-							Editing bouquet image...
-						</p>
-					{/if}
-
-					<div class="grid grid-cols-2 gap-2">
-						<button
-							type="button"
-							class="border border-pill px-4 py-3 text-sm text-ink disabled:opacity-50"
-							disabled={!prompt.trim() || editing || continuing}
-							onclick={applyEdit}
-						>
-							{editing ? 'Applying...' : 'Apply edit'}
-						</button>
-						<button
-							type="button"
-							class="bg-pill px-4 py-3 text-sm text-surface"
-							disabled={editing || continuing}
-							onclick={continueToResult}
-						>
-							{continuing ? 'Preparing result...' : 'Continue to result'}
-						</button>
-					</div>
+				<div class="flex justify-end">
+					<button
+						type="button"
+						disabled={editing || continuing}
+						onclick={continueToResult}
+						class="px-2 py-2 text-sm whitespace-nowrap text-ink underline-offset-4 hover:underline disabled:opacity-50"
+					>
+						{continuing ? 'Preparing result...' : 'Continue to result ->'}
+					</button>
 				</div>
 			</div>
 		</section>
