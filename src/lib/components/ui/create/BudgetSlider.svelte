@@ -1,5 +1,7 @@
 <script>
-	let { budget = $bindable(50000) } = $props();
+	import './budget-slider.css';
+
+	let { budget = $bindable() } = $props();
 
 	const min = 10_000;
 	const max = 150_000;
@@ -39,33 +41,3 @@
 		</div>
 	</div>
 </div>
-
-<style>
-	.budget-slider::-webkit-slider-thumb {
-		appearance: none;
-		width: 1rem;
-		height: 1rem;
-		border-radius: 9999px;
-		background: var(--color-pill);
-		border: none;
-		margin-top: -0.4375rem;
-	}
-
-	.budget-slider::-moz-range-thumb {
-		width: 1rem;
-		height: 1rem;
-		border-radius: 9999px;
-		background: var(--color-pill);
-		border: none;
-	}
-
-	.budget-slider::-webkit-slider-runnable-track {
-		height: 1px;
-		background: transparent;
-	}
-
-	.budget-slider::-moz-range-track {
-		height: 1px;
-		background: transparent;
-	}
-</style>
