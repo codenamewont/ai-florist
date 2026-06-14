@@ -5,7 +5,7 @@ import {
 	getImageProvider,
 	isImageGenerationConfigured
 } from '$lib/server/gemini/image.js';
-import { buildImagePrompt } from '$lib/server/gemini/text.js';
+import { buildImagePrompt, applyRecipeEdit } from '$lib/server/gemini/text.js';
 import { json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
 
 /**
@@ -74,7 +74,8 @@ export async function POST({ request }) {
 			return json({ error: 'recipe is missing. Run recipe first.', code: 'bad_request' }, 400);
 		}
 
-		const basePrompt = job.imagePrompt ?? (await buildImagePrompt(job.recipe));
+		const updatedRecipe = await applyRecipeEdit(job.recipe, prompt);
+		const basePrompt = job.imagePrompt ?? (await buildImagePrompt(updatedRecipe));
 		const editPrompt = `${basePrompt}\n\n${describeEditInstruction({ mode, prompt, selection })}`;
 
 		console.log(
@@ -86,13 +87,19 @@ export async function POST({ request }) {
 			generatedImage,
 			`edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 		);
-		await updateJob(jobId, { imagePrompt: editPrompt, images, floristNote: null });
+		await updateJob(jobId, {
+			recipe: updatedRecipe,
+			imagePrompt: editPrompt,
+			images,
+			floristNote: null
+		});
 		console.log(
 			`[flower-flow] edit-images job=${jobId.slice(0, 8)} OK (mock=${!isImageGenerationConfigured()})`
 		);
 
 		return json({
 			jobId,
+			recipe: updatedRecipe,
 			imagePrompt: editPrompt,
 			images,
 			mock: !isImageGenerationConfigured()

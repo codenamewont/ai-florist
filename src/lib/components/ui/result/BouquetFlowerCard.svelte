@@ -12,8 +12,12 @@
 
 	let flipped = $state(false);
 
-	const roleLabel = $derived(role === 'main' ? 'Main' : 'Sub');
-	const roleLabelKo = $derived(role === 'main' ? '메인' : '서브');
+	const roleLabel = $derived(
+		role === 'main' ? 'Main' : role === 'greenery' ? 'Greenery' : 'Filler'
+	);
+	const roleLabelKo = $derived(
+		role === 'main' ? '메인' : role === 'greenery' ? '그리너리' : '필러'
+	);
 
 	function toggleFlip() {
 		flipped = !flipped;

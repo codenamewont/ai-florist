@@ -34,7 +34,7 @@
 
 	const artworkDescription = $derived(
 		hasAnySelection
-			? `${style ?? '—'} style · ₩${budget.toLocaleString('ko-KR')} budget`
+			? `${style ?? '...'} style · ₩${budget.toLocaleString('ko-KR')} budget`
 			: 'Description Description Description'
 	);
 

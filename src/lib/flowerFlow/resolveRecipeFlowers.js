@@ -2,7 +2,7 @@ import { flowerCatalogLite } from './flowerCatalogLite.js';
 import { getFlowerKo } from './flowerCatalogKo.js';
 
 /**
- * @typedef {{ id: number, name: string, nameKo: string, wordOfFlower: string, wordOfFlowerKo: string, imageSrc: string, label: string, role: 'main' | 'sub' }} RecipeFlowerCard
+ * @typedef {{ id: number, name: string, nameKo: string, wordOfFlower: string, wordOfFlowerKo: string, imageSrc: string, label: string, role: 'main' | 'sub' | 'greenery' }} RecipeFlowerCard
  */
 
 /** @param {string} name */
@@ -42,7 +42,7 @@ function matchCatalogFlower(label) {
 }
 
 /**
- * @param {{ mainFlowers?: string[], subFlowers?: string[] } | null | undefined} recipe
+ * @param {{ mainFlowers?: string[], subFlowers?: string[], greenery?: string[] } | null | undefined} recipe
  * @param {(id: number) => string} getImageSrc
  * @returns {RecipeFlowerCard[]}
  */
@@ -54,7 +54,7 @@ export function resolveRecipeFlowers(recipe, getImageSrc) {
 	/** @type {Set<number>} */
 	const seenIds = new Set();
 
-	/** @param {string[] | undefined} labels @param {'main' | 'sub'} role */
+	/** @param {string[] | undefined} labels @param {'main' | 'sub' | 'greenery'} role */
 	const addFlowers = (labels, role) => {
 		for (const label of labels ?? []) {
 			if (!label) continue;
@@ -79,6 +79,7 @@ export function resolveRecipeFlowers(recipe, getImageSrc) {
 
 	addFlowers(recipe.mainFlowers, 'main');
 	addFlowers(recipe.subFlowers, 'sub');
+	addFlowers(recipe.greenery, 'greenery');
 
 	return cards;
 }
@@ -94,6 +95,107 @@ export function truncateDescription(text, maxLength = 140) {
 	if (trimmed.length <= maxLength) return trimmed;
 
 	return `${trimmed.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+/**
+ * @param {string[]} [items]
+ * @param {number} [limit=2]
+ */
+function pickKeywords(items, limit = 2) {
+	if (!items?.length) return '';
+	return items.filter(Boolean).slice(0, limit).join(', ');
+}
+
+/**
+ * Short mood-led title for the result description card.
+ * @param {{ moodKeywords?: string[], styleImpression?: string[] } | null | undefined} moodAnalysis
+ */
+export function buildBriefBouquetTitle(moodAnalysis) {
+	if (!moodAnalysis) return 'Your bouquet';
+
+	const keywords = [
+		...(moodAnalysis.styleImpression ?? []),
+		...(moodAnalysis.moodKeywords ?? [])
+	].filter(Boolean);
+
+	if (keywords.length === 0) return 'Your bouquet';
+
+	return keywords
+		.slice(0, 2)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' & ');
+}
+
+/**
+ * @param {{ notes?: string } | null | undefined} userInput
+ */
+export function extractCardMessage(userInput) {
+	const notes = userInput?.notes?.trim();
+	if (!notes) return '';
+
+	const prefix = 'Card message: ';
+	return notes.startsWith(prefix) ? notes.slice(prefix.length).trim() : notes;
+}
+
+/**
+ * @param {{ mainFlowers?: string[] } | null | undefined} recipe
+ */
+function getPrimaryFlowerFromRecipe(recipe) {
+	const label = recipe?.mainFlowers?.[0];
+	if (!label) return null;
+	return matchCatalogFlower(label);
+}
+
+/**
+ * Why this bouquet fits — mood from images, message, and main flower language.
+ * @param {{ moodKeywords?: string[], styleImpression?: string[], colorPalette?: string[] } | null | undefined} moodAnalysis
+ * @param {{ relationship?: string, notes?: string } | null | undefined} userInput
+ * @param {{ mainFlowers?: string[] } | null | undefined} recipe
+ */
+export function buildBouquetRationale(moodAnalysis, userInput, recipe) {
+	const recipient = userInput?.relationship?.trim();
+	const subject = recipient ? `${recipient}'s` : 'The';
+	const cardMessage = extractCardMessage(userInput);
+	const mainFlower = getPrimaryFlowerFromRecipe(recipe);
+
+	const mood = pickKeywords(
+		[...(moodAnalysis?.moodKeywords ?? []), ...(moodAnalysis?.styleImpression ?? [])],
+		2
+	);
+	const colors = pickKeywords(moodAnalysis?.colorPalette, 2);
+
+	/** @type {string[]} */
+	const parts = [];
+
+	if (mood && colors) {
+		parts.push(`${subject} ${mood} mood and ${colors} tones came through in the moodboard.`);
+	} else if (mood) {
+		parts.push(`${subject} ${mood} mood came through in the moodboard.`);
+	} else if (colors) {
+		parts.push(`${subject} ${colors} tones came through in the moodboard.`);
+	} else if (!moodAnalysis) {
+		parts.push('We shaped this bouquet from the feeling in the images.');
+	}
+
+	if (cardMessage && mainFlower) {
+		const messageRef =
+			cardMessage.length <= 40 ? `your message, "${cardMessage}"` : 'your message';
+		parts.push(
+			`For ${messageRef}, ${mainFlower.name} (${mainFlower.wordOfFlower}) felt like the right fit.`
+		);
+	} else if (cardMessage) {
+		parts.push('Your message helped guide the flowers we chose.');
+	} else if (mainFlower) {
+		parts.push(`${mainFlower.name} (${mainFlower.wordOfFlower}) anchors the bouquet.`);
+	}
+
+	if (parts.length === 0) {
+		return recipient
+			? `This bouquet reflects the feeling in ${recipient}'s images.`
+			: 'This bouquet reflects the feeling in the images.';
+	}
+
+	return parts.join(' ');
 }
 
 /**

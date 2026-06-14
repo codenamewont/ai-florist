@@ -183,6 +183,9 @@
 			const result = await editImages(jobId, instruction);
 			const afterImage = result.images?.primary ?? null;
 			generatedImage = afterImage;
+			if (result.recipe) {
+				recipe = result.recipe;
+			}
 			chatMessages = chatMessages.map((message) =>
 				message.id === assistantMessageId
 					? { ...message, status: 'done', afterImage }

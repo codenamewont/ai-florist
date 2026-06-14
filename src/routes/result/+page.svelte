@@ -10,17 +10,19 @@
 	} from '$lib/components/ui/FlowContinueBar.svelte';
 	import { fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { getFlowerImageSrc } from '$lib/flowerFlow/flowerImagePaths.js';
-	import { resolveRecipeFlowers, buildBriefBouquetDescription } from '$lib/flowerFlow/resolveRecipeFlowers.js';
+	import { resolveRecipeFlowers, buildBouquetRationale, buildBriefBouquetTitle } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 	import { getFlowString } from '$lib/flowerFlow/session.js';
 
 	let loading = $state(true);
 	let error = $state('');
 	let selectedImage = $state(null);
 	let recipe = $state(null);
+	let moodAnalysis = $state(null);
+	let userInput = $state(null);
 	let mock = $state(false);
 
-	const artworkTitle = $derived(recipe?.concept?.trim() || 'Your bouquet');
-	const artworkDescription = $derived(buildBriefBouquetDescription(recipe));
+	const artworkTitle = $derived(buildBriefBouquetTitle(moodAnalysis));
+	const artworkDescription = $derived(buildBouquetRationale(moodAnalysis, userInput, recipe));
 	const bouquetImageSrc = $derived(selectedImage ? toDataUrl(selectedImage) : null);
 	const bouquetFlowers = $derived(resolveRecipeFlowers(recipe, getFlowerImageSrc));
 
@@ -36,6 +38,8 @@
 			const job = await fetchJob(jobId);
 			selectedImage = job.images?.primary ?? null;
 			recipe = job.recipe ?? null;
+			moodAnalysis = job.moodAnalysis ?? null;
+			userInput = job.userInput ?? null;
 			mock = Boolean(job.mock);
 			loading = false;
 		} catch (err) {

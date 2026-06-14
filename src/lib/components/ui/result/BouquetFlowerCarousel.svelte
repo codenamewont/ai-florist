@@ -1,7 +1,7 @@
 <script>
 	import BouquetFlowerCard from './BouquetFlowerCard.svelte';
 
-	/** @type {{ id: number, name: string, nameKo: string, wordOfFlower: string, wordOfFlowerKo: string, imageSrc: string, role?: 'main' | 'sub' }[]} */
+	/** @type {{ id: number, name: string, nameKo: string, wordOfFlower: string, wordOfFlowerKo: string, imageSrc: string, role?: 'main' | 'sub' | 'greenery' }[]} */
 	let { flowers = [] } = $props();
 </script>
 
