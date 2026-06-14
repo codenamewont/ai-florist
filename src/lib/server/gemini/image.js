@@ -21,10 +21,14 @@ export function isImageGenerationConfigured() {
 
 /**
  * @param {string} basePrompt
+ * @param {{ edit?: boolean }} [options]
  * @returns {Promise<GeneratedImage>}
  */
-export async function generateBouquetImage(basePrompt) {
-	const prompt = `${basePrompt}\n\nGenerate one final bouquet image. Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.`;
+export async function generateBouquetImage(basePrompt, options = {}) {
+	const suffix = options.edit
+		? 'Generate exactly one edited bouquet image. Show a single bouquet only, centered in frame. Do not show two bouquets, no side-by-side comparison, no before/after layout, and no duplicate arrangements. Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.'
+		: 'Generate one final bouquet image. Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.';
+	const prompt = `${basePrompt}\n\n${suffix}`;
 	const provider = getImageProvider();
 
 	// Explicit mock mode: develop the full flow without spending any image quota.
