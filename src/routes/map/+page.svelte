@@ -9,11 +9,9 @@
 	import { buildFloristOrderMessage } from '$lib/flowerFlow/buildFloristOrderMessage.js';
 	import { getFlowObject, getFlowString } from '$lib/flowerFlow/session.js';
 	import { ARTWORK_CARD_DEFAULTS } from '$lib/flowerFlow/artworkCardCopy.js';
+	import { getUserMapCenter } from '$lib/map/userLocation.js';
 
 	const jobId = getFlowString('jobId');
-
-	const DEFAULT_LAT = 37.5665;
-	const DEFAULT_LNG = 126.978;
 
 	let shops = $state([]);
 	let loading = $state(true);
@@ -25,6 +23,10 @@
 	let orderPlainText = $state('');
 	let orderKoPlainText = $state('');
 	let selectedImage = $state(null);
+	let locationReady = $state(false);
+	let searchLat = $state(37.5665);
+	let searchLng = $state(126.978);
+	let locationNotice = $state('');
 
 	const sessionUserInput = getFlowObject('userInput') ?? {};
 
@@ -97,7 +99,16 @@
 			// job 없어도 지도·꽃집 검색은 계속
 		}
 
-		await loadShops(DEFAULT_LAT, DEFAULT_LNG, { fitBounds: true });
+		const center = await getUserMapCenter();
+		searchLat = center.lat;
+		searchLng = center.lng;
+		if (!center.fromDevice) {
+			locationNotice =
+				'Location access unavailable. Showing flower shops near Seoul City Hall instead.';
+		}
+		locationReady = true;
+
+		await loadShops(searchLat, searchLng, { fitBounds: true });
 	});
 </script>
 
@@ -115,17 +126,26 @@
 		/>
 
 		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
-			<MapPanel
-				bind:selectedShopId
-				{shops}
-				{loading}
-				{error}
-				{mock}
-				{orderPlainText}
-				{orderKoPlainText}
-				fitBounds={fitMapBounds}
-				onrefresh={(lat, lng) => loadShops(lat, lng, { fitBounds: false })}
-			/>
+			{#if locationReady}
+				<MapPanel
+					bind:selectedShopId
+					initialLat={searchLat}
+					initialLng={searchLng}
+					{locationNotice}
+					{shops}
+					{loading}
+					{error}
+					{mock}
+					{orderPlainText}
+					{orderKoPlainText}
+					fitBounds={fitMapBounds}
+					onrefresh={(lat, lng) => loadShops(lat, lng, { fitBounds: false })}
+				/>
+			{:else}
+				<div class="flex flex-1 items-center justify-center px-6 py-16 text-sm text-muted">
+					Getting your location...
+				</div>
+			{/if}
 		</section>
 	</main>
 </div>

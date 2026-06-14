@@ -2,6 +2,7 @@
 	import FloristOrderMessage from './FloristOrderMessage.svelte';
 	import KakaoMap from './KakaoMap.svelte';
 	import ShopList from './ShopList.svelte';
+	import { DEFAULT_MAP_CENTER } from '$lib/map/userLocation.js';
 
 	let {
 		shops = [],
@@ -12,14 +13,14 @@
 		fitBounds = false,
 		orderPlainText = '',
 		orderKoPlainText = '',
+		initialLat = DEFAULT_MAP_CENTER.lat,
+		initialLng = DEFAULT_MAP_CENTER.lng,
+		locationNotice = '',
 		onrefresh
 	} = $props();
 
-	const DEFAULT_LAT = 37.5665;
-	const DEFAULT_LNG = 126.978;
-
-	let mapCenterLat = $state(DEFAULT_LAT);
-	let mapCenterLng = $state(DEFAULT_LNG);
+	let mapCenterLat = $state(initialLat);
+	let mapCenterLng = $state(initialLng);
 	let panTarget = $state(null);
 
 	function handleCenterChange(lat, lng) {
@@ -46,6 +47,9 @@
 			Find a nearby florist
 		</h1>
 		<p class="mt-3 text-sm text-muted">Move the map, then refresh to search this area.</p>
+		{#if locationNotice}
+			<p class="mt-2 text-xs text-muted">{locationNotice}</p>
+		{/if}
 		{#if mock}
 			<p class="mt-2 text-xs text-muted">Showing sample shops (no Kakao API key).</p>
 		{/if}
@@ -63,8 +67,8 @@
 	<div class="flex min-h-0 flex-1 flex-col gap-6 px-6 pb-8 md:px-10 lg:flex-row lg:px-12 lg:pb-10">
 		<div class="relative flex min-h-64 flex-1 flex-col overflow-hidden border border-line lg:min-h-0">
 			<KakaoMap
-				initialLat={DEFAULT_LAT}
-				initialLng={DEFAULT_LNG}
+				initialLat={initialLat}
+				initialLng={initialLng}
 				{shops}
 				selectedId={selectedShopId}
 				{fitBounds}
