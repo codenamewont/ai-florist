@@ -13,7 +13,7 @@
 
 <div
 	class={[
-		'fixed right-0 bottom-0 left-0 z-20 space-y-2 px-4 pb-5 lg:static lg:flex lg:shrink-0 lg:flex-col lg:items-end lg:px-6 lg:pb-0',
+		'fixed right-0 bottom-0 left-0 z-20 space-y-2 bg-placeholder/30 px-4 pb-5 lg:static lg:flex lg:shrink-0 lg:flex-col lg:items-end lg:bg-transparent lg:px-6 lg:pb-0',
 		klass
 	]}
 >
