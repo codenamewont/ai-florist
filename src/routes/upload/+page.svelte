@@ -234,17 +234,9 @@
 			</div>
 
 			{#if mode === 'moodboard'}
-				<MoodboardGrid
-					bind:primaryFile
-					bind:uploadedTiles={moodboardTiles}
-					caption={`build ${recipientPronoun} moodboard!`}
-				/>
+				<MoodboardGrid bind:primaryFile bind:uploadedTiles={moodboardTiles} />
 			{:else}
-				<SnsFeedUpload
-					bind:primaryFile
-					bind:hasImage={snsHasImage}
-					caption={`upload ${recipientPronoun} feed!`}
-				/>
+				<SnsFeedUpload bind:primaryFile bind:hasImage={snsHasImage} />
 			{/if}
 
 			<div
