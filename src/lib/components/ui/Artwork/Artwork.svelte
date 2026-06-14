@@ -7,6 +7,8 @@
 	let {
 		title = 'Title',
 		description = 'Description Description Description',
+		/** @type {'instruction' | 'summary'} */
+		cardMode = 'summary',
 		/** @type {import('./artworkVariants.js').ArtworkVariant} */
 		variant = 'create1',
 		/** edit Continue 이후 확정된 꽃다발만 전달 (그 전에는 null → Vase) */
@@ -42,7 +44,7 @@
 		</div>
 
 		<div class="min-w-0 shrink-0 lg:w-full lg:flex lg:justify-center">
-			<DescriptionCard {title} {description} />
+			<DescriptionCard {title} {description} mode={cardMode} />
 		</div>
 	</div>
 	{#if comingSoon}

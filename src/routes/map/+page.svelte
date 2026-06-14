@@ -8,11 +8,10 @@
 	import { fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { buildFloristOrderMessage } from '$lib/flowerFlow/buildFloristOrderMessage.js';
 	import { getFlowObject, getFlowString } from '$lib/flowerFlow/session.js';
+	import { ARTWORK_CARD_DEFAULTS } from '$lib/flowerFlow/artworkCardCopy.js';
+	import { getUserMapCenter } from '$lib/map/userLocation.js';
 
 	const jobId = getFlowString('jobId');
-
-	const DEFAULT_LAT = 37.5665;
-	const DEFAULT_LNG = 126.978;
 
 	let shops = $state([]);
 	let loading = $state(true);
@@ -24,12 +23,24 @@
 	let orderPlainText = $state('');
 	let orderKoPlainText = $state('');
 	let selectedImage = $state(null);
+	let locationReady = $state(false);
+	let searchLat = $state(37.5665);
+	let searchLng = $state(126.978);
+	let locationNotice = $state('');
 
 	const sessionUserInput = getFlowObject('userInput') ?? {};
 
-	const artworkTitle = $derived(selectedShopId ? 'Ready to order' : 'Your bouquet');
+	const artworkTitle = $derived(
+		selectedShopId ? 'Ready to order' : ARTWORK_CARD_DEFAULTS.map.title
+	);
 
-	const artworkDescription = $derived(floristNote || 'Your selected bouquet design.');
+	const artworkDescription = $derived(
+		selectedShopId
+			? floristNote || 'Your selected bouquet design.'
+			: ARTWORK_CARD_DEFAULTS.map.description
+	);
+
+	const artworkCardMode = $derived(selectedShopId ? 'summary' : 'instruction');
 
 	const bouquetImageSrc = $derived(selectedImage ? toDataUrl(selectedImage) : null);
 
@@ -88,7 +99,16 @@
 			// job 없어도 지도·꽃집 검색은 계속
 		}
 
-		await loadShops(DEFAULT_LAT, DEFAULT_LNG, { fitBounds: true });
+		const center = await getUserMapCenter();
+		searchLat = center.lat;
+		searchLng = center.lng;
+		if (!center.fromDevice) {
+			locationNotice =
+				'Location access unavailable. Showing flower shops near Seoul City Hall instead.';
+		}
+		locationReady = true;
+
+		await loadShops(searchLat, searchLng, { fitBounds: true });
 	});
 </script>
 
@@ -98,20 +118,34 @@
 	<Header step={7} total={7} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
-		<Artwork title={artworkTitle} description={artworkDescription} imageSrc={bouquetImageSrc} />
+		<Artwork
+			title={artworkTitle}
+			description={artworkDescription}
+			imageSrc={bouquetImageSrc}
+			cardMode={artworkCardMode}
+		/>
 
 		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-y-auto">
-			<MapPanel
-				bind:selectedShopId
-				{shops}
-				{loading}
-				{error}
-				{mock}
-				{orderPlainText}
-				{orderKoPlainText}
-				fitBounds={fitMapBounds}
-				onrefresh={(lat, lng) => loadShops(lat, lng, { fitBounds: false })}
-			/>
+			{#if locationReady}
+				<MapPanel
+					bind:selectedShopId
+					initialLat={searchLat}
+					initialLng={searchLng}
+					{locationNotice}
+					{shops}
+					{loading}
+					{error}
+					{mock}
+					{orderPlainText}
+					{orderKoPlainText}
+					fitBounds={fitMapBounds}
+					onrefresh={(lat, lng) => loadShops(lat, lng, { fitBounds: false })}
+				/>
+			{:else}
+				<div class="flex flex-1 items-center justify-center px-6 py-16 text-sm text-muted">
+					Getting your location...
+				</div>
+			{/if}
 		</section>
 	</main>
 </div>
