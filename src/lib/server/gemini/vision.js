@@ -26,6 +26,8 @@ Return JSON only with this shape:
   "energyLevel": "low" | "medium" | "high"
 }
 
+Use plain color names only (e.g. ivory, navy, blush). Do not use hex codes or RGB values.
+
 User context:
 - relationship: ${userInput.relationship ?? 'unknown'}
 - occasion: ${userInput.occasion ?? 'unknown'}

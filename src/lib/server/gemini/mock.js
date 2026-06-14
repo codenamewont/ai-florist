@@ -1,6 +1,8 @@
 /** @typedef {import('../flowerFlow/jobStore.js').MoodAnalysis} MoodAnalysis */
 /** @typedef {import('../flowerFlow/jobStore.js').BouquetRecipe} BouquetRecipe */
 
+import { formatStrictBouquetImagePrompt } from '../../flowerFlow/bouquetImageFormat.js';
+
 /** @returns {MoodAnalysis} */
 export function mockMoodAnalysis() {
 	return {
@@ -56,15 +58,7 @@ export function mockRecipe(userInput = {}) {
 
 /** @param {BouquetRecipe} recipe */
 export function mockImagePrompt(recipe) {
-	return [
-		'Generate a realistic florist-style bouquet image.',
-		'Use real flowers only.',
-		`Use ${recipe.mainFlowers.join(', ')} as the main flower, mixed with ${recipe.subFlowers.join(', ')}, and ${recipe.greenery.join(', ')}.`,
-		`Use a ${recipe.colors.join(', ')} color palette.`,
-		`Wrap it with ${recipe.wrapping}.`,
-		'White background, soft natural lighting, Korean florist style.',
-		'Vertical portrait composition with a 3:4 aspect ratio (width:height). Frame the full bouquet without cropping.'
-	].join(' ');
+	return formatStrictBouquetImagePrompt(recipe);
 }
 
 /** @param {string} [label] */
