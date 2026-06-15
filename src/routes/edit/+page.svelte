@@ -10,12 +10,7 @@
 	import { getFlowString, saveFlow } from '$lib/flowerFlow/session.js';
 
 	const jobId = getFlowString('jobId');
-	const QUICK_PROMPTS = [
-		'Make it more romantic',
-		'Use warmer colors',
-		'Add more volume',
-		'Keep the same flowers'
-	];
+	const QUICK_PROMPTS = ['Make it more romantic', 'Use warmer colors', 'Add more volume'];
 
 	let loading = $state(true);
 	let error = $state('');
@@ -36,15 +31,17 @@
 	const hasAreaSelection = $derived(selectionPoints.length > 2);
 	const title = $derived(buildBriefBouquetTitle(moodAnalysis));
 	const description = $derived.by(() => {
+		const intro = 'Tell us how you want to refine it.';
+
 		if (hasAreaSelection) {
-			return 'Your prompt will apply to the marked area only.';
+			return `${intro} Your prompt will apply to the marked area only.`;
 		}
 
 		if (areaSelectionActive) {
-			return 'Use the pencil to draw a red outline, then describe that area.';
+			return `${intro} Use the pencil to draw a red outline, then describe that area.`;
 		}
 
-		return 'Tap the pencil on the image to mark an area, or edit the whole bouquet.';
+		return `${intro} Tap the pencil on the image to mark an area, or edit the whole bouquet.`;
 	});
 	const selectionPolyline = $derived(
 		selectionPoints.map((point) => `${point.x},${point.y}`).join(' ')
@@ -212,7 +209,6 @@
 			chatMessages = chatMessages.map((entry) =>
 				entry.id === assistantMessageId ? { ...entry, status: 'error', error: message } : entry
 			);
-			error = message;
 		} finally {
 			editing = false;
 		}
@@ -368,22 +364,17 @@
 
 		<section class="relative flex min-h-0 flex-1 flex-col overflow-hidden pb-44 lg:pb-8">
 			<div class="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-5 lg:py-6">
-				<div class="shrink-0">
-					<p class="text-xs tracking-[0.2em] text-muted uppercase">Edit bouquet</p>
-					<h2 class="mt-1 text-lg">Tell us how you want to refine it.</h2>
-				</div>
-
-				<div bind:this={chatScrollEl} class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+				<div bind:this={chatScrollEl} class="min-h-0 flex-1 space-y-4 overflow-y-auto px-1 py-0.5">
 					<div class="space-y-2">
-						<p class="text-xs text-muted">Generated image</p>
 						{@render editableImageFrame(initialImage ?? generatedImage, chatMessages.length === 0)}
+						<p class="text-xs text-muted">Generated image</p>
 					</div>
 
 					{#each chatMessages as message (message.id)}
 						{#if message.role === 'user'}
 							<div class="flex justify-end">
 								<div
-									class="max-w-[46%] rounded-3xl bg-pill px-4 py-3 text-sm leading-relaxed text-surface"
+									class="max-w-[46%] rounded-lg bg-pill px-4 py-3 text-sm leading-relaxed text-surface"
 								>
 									<p>{message.prompt}</p>
 									{#if message.mode === 'area'}
@@ -394,7 +385,7 @@
 						{:else if message.status === 'pending'}
 							<div class="flex justify-start">
 								<div
-									class="max-w-[46%] rounded-3xl bg-track px-4 py-3 text-sm leading-relaxed text-muted ring-1 ring-black/5"
+									class="max-w-[46%] rounded-lg bg-track px-4 py-3 text-sm leading-relaxed text-muted ring-1 ring-line ring-inset"
 								>
 									Editing bouquet image...
 								</div>
@@ -402,7 +393,7 @@
 						{:else if message.status === 'error'}
 							<div class="flex justify-start">
 								<div
-									class="max-w-[46%] rounded-3xl bg-surface px-4 py-3 text-sm leading-relaxed text-red-600 ring-1 ring-red-200"
+									class="max-w-[46%] rounded-lg bg-surface px-4 py-3 text-sm leading-relaxed text-red-600 ring-1 ring-red-200 ring-inset"
 								>
 									{message.error}
 								</div>
@@ -415,25 +406,23 @@
 						{/if}
 					{/each}
 				</div>
+			</div>
 
-				<div class="flex shrink-0 flex-wrap gap-2">
+			<FlowContinueBar class="!space-y-1.5 lg:mx-auto lg:w-full lg:max-w-2xl">
+				<div class="flex w-full flex-wrap gap-1.5">
 					{#each QUICK_PROMPTS as quickPrompt (quickPrompt)}
 						<button
 							type="button"
 							onclick={() => addQuickPrompt(quickPrompt)}
-							class="rounded-full bg-placeholder px-3 py-1 text-xs text-ink hover:bg-line-strong"
+							class="rounded-full bg-track px-3 py-1 text-xs text-ink ring-1 ring-line ring-inset hover:bg-line"
 						>
 							{quickPrompt}
 						</button>
 					{/each}
 				</div>
-			</div>
 
-			<FlowContinueBar class="lg:mx-auto lg:w-full lg:max-w-2xl">
 				{#if error}
-					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
-						{error}
-					</p>
+					<p class="text-xs text-red-600">{error}</p>
 				{/if}
 
 				<div
