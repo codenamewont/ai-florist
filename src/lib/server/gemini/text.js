@@ -81,29 +81,6 @@ export async function buildImagePrompt(recipe) {
 	return formatStrictBouquetImagePrompt(recipe);
 }
 
-/**
- * @param {BouquetRecipe} recipe
- * @returns {Promise<string>}
- */
-export async function buildFloristNote(recipe) {
-	if (!isGeminiConfigured()) {
-		const { mockFloristNote } = await import('./mock.js');
-		return mockFloristNote(recipe);
-	}
-
-	const model = getTextModel();
-	const prompt = `Write a concise florist note for a customer-facing result screen.
-Use this bouquet recipe:
-${JSON.stringify(recipe, null, 2)}
-
-Tone: warm, professional, specific.
-Mention why the main, accent, and greenery choices work together as one cohesive bouquet.
-Return plain text only.`;
-
-	const result = await model.generateContent(prompt);
-	return result.response.text().trim();
-}
-
 /** Flower names allowed in edited recipes — same source as initial recipe generation. */
 function getFlowerDBCandidatesByRole() {
 	/** @type {{ main: string[], filler: string[], line: string[], foliage: string[] }} */

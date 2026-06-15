@@ -10,7 +10,7 @@ export const RATE_LIMITS = {
 	imageGeneration: { limit: 20, windowMs: 60 * 60 * 1000 },
 	/** Bouquet photo edits (expensive). */
 	imageEdit: { limit: 40, windowMs: 60 * 60 * 1000 },
-	/** Text recipe + florist note endpoints. */
+	/** Text recipe endpoints. */
 	textAi: { limit: 60, windowMs: 60 * 60 * 1000 },
 	/** Kakao shop search proxy. */
 	mapShops: { limit: 120, windowMs: 60 * 60 * 1000 }

@@ -7,6 +7,7 @@
 	import MapPanel from '$lib/components/ui/map/MapPanel.svelte';
 	import { fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { buildFloristOrderMessage } from '$lib/flowerFlow/buildFloristOrderMessage.js';
+	import { buildMapOrderDescription } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 	import { getFlowObject, getFlowString } from '$lib/flowerFlow/session.js';
 	import { ARTWORK_CARD_DEFAULTS } from '$lib/flowerFlow/artworkCardCopy.js';
 	import { getUserMapCenter } from '$lib/map/userLocation.js';
@@ -18,7 +19,9 @@
 	let error = $state('');
 	let mock = $state(false);
 	let selectedShopId = $state(null);
-	let floristNote = $state('');
+	let recipe = $state(null);
+	let moodAnalysis = $state(null);
+	let userInput = $state(null);
 	let fitMapBounds = $state(true);
 	let orderPlainText = $state('');
 	let orderKoPlainText = $state('');
@@ -36,7 +39,10 @@
 
 	const artworkDescription = $derived(
 		selectedShopId
-			? floristNote || 'Your selected bouquet design.'
+			? buildMapOrderDescription(recipe, {
+					moodAnalysis,
+					userInput: { ...sessionUserInput, ...userInput }
+				})
 			: ARTWORK_CARD_DEFAULTS.map.description
 	);
 
@@ -85,7 +91,9 @@
 
 		try {
 			const job = await fetchJob(jobId);
-			floristNote = job.floristNote ?? '';
+			recipe = job.recipe ?? null;
+			moodAnalysis = job.moodAnalysis ?? null;
+			userInput = job.userInput ?? null;
 			selectedImage = job.images?.primary ?? null;
 
 			const order = buildFloristOrderMessage({

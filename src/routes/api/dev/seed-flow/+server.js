@@ -20,7 +20,7 @@ export async function POST({ request }) {
 		// 기본값 사용
 	}
 
-	const seeded = await seedDevJob(DEV_USER_INPUT_WITH_NOTES, stage);
+	const seeded = await seedDevJob(DEV_USER_INPUT_WITH_NOTES);
 
 	return json({
 		stage,
@@ -42,8 +42,7 @@ export async function POST({ request }) {
 				mode: 'moodboard',
 				moodboard: DEV_MOODBOARD_UPLOAD,
 				sns: DEV_SNS_UPLOAD
-			},
-			...(stage === 'result' ? { floristNote: seeded.floristNote } : {})
+			}
 		},
 		// create 폼 초기값 참고용 (relationship/occasion/style/budget만)
 		formDefaults: DEV_USER_INPUT

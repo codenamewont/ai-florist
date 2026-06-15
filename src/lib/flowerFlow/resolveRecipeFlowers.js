@@ -170,6 +170,63 @@ export function truncateDescription(text, maxLength = 140) {
 }
 
 /**
+ * One-line context for the map order card (mood, recipient, or recipe concept).
+ * @param {{ moodKeywords?: string[], styleImpression?: string[] } | null | undefined} moodAnalysis
+ * @param {{ relationship?: string, notes?: string } | null | undefined} userInput
+ * @param {{ concept?: string } | null | undefined} recipe
+ */
+function buildMapOrderIntro(moodAnalysis, userInput, recipe) {
+	const recipient = userInput?.relationship?.trim();
+	const mood = pickKeywords(
+		[...(moodAnalysis?.moodKeywords ?? []), ...(moodAnalysis?.styleImpression ?? [])],
+		2
+	);
+	const hasCardMessage = Boolean(extractCardMessage(userInput));
+
+	if (hasCardMessage && recipient) {
+		return `A bouquet for ${recipient}, shaped around your card message`;
+	}
+	if (hasCardMessage) {
+		return 'A bouquet shaped around your card message';
+	}
+	if (mood && recipient) {
+		return `A ${mood} bouquet for ${recipient}`;
+	}
+	if (mood) {
+		return `A ${mood} bouquet from your moodboard`;
+	}
+	if (recipe?.concept?.trim()) {
+		return recipe.concept.trim();
+	}
+	if (recipient) {
+		return `A custom bouquet for ${recipient}`;
+	}
+	return 'Your custom bouquet design';
+}
+
+/**
+ * Map order card — short intro plus flower species (main → sub → greenery, capped).
+ * @param {{ mainFlowers?: string[], subFlowers?: string[], greenery?: string[], concept?: string } | null | undefined} recipe
+ * @param {{
+ *   moodAnalysis?: { moodKeywords?: string[], styleImpression?: string[] } | null,
+ *   userInput?: { relationship?: string, notes?: string } | null,
+ *   maxFlowers?: number
+ * }} [options]
+ */
+export function buildMapOrderDescription(recipe, options = {}) {
+	const { moodAnalysis = null, userInput = null, maxFlowers = 4 } = options;
+	const flowers = resolveRecipeFlowers(recipe, () => '').slice(0, maxFlowers);
+	if (flowers.length === 0) {
+		return 'Your selected bouquet design.';
+	}
+
+	const intro = buildMapOrderIntro(moodAnalysis, userInput, recipe);
+	const flowerList = flowers.map((flower) => flower.name).join(', ');
+
+	return `${intro}: ${flowerList}.`;
+}
+
+/**
  * @param {string[]} [items]
  * @param {number} [limit=2]
  */

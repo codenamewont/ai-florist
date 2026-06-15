@@ -101,17 +101,6 @@ export async function editImages(jobId, editInstruction) {
 }
 
 /** @param {string} jobId */
-export async function finalizeJob(jobId) {
-	const response = await fetch('/api/flower-flow/finalize', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ jobId })
-	});
-
-	return parseResponse(response);
-}
-
-/** @param {string} jobId */
 export async function fetchJob(jobId) {
 	const response = await fetch(`/api/flower-flow/job?jobId=${encodeURIComponent(jobId)}`);
 	return parseResponse(response);

@@ -87,8 +87,7 @@ function editForJob(jobId, job, instruction) {
 		await updateJob(jobId, {
 			recipe: updatedRecipe,
 			imagePrompt: editPrompt,
-			images,
-			floristNote: null
+			images
 		});
 		console.log(
 			`[flower-flow] edit-images job=${jobId.slice(0, 8)} OK (mock=${!isImageGenerationConfigured()})`

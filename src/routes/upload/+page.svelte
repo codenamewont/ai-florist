@@ -182,7 +182,6 @@
 				imagePrompt: null,
 				images: null,
 				imagesJobId: null,
-				floristNote: null,
 				mock: result.mock
 			});
 			await goto(resolve('/message'));

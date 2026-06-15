@@ -5,9 +5,7 @@ create table if not exists public.flower_jobs (
 	mood_analysis jsonb,
 	recipe jsonb,
 	image_prompt text,
-	images jsonb not null default '{}'::jsonb,
-	selected_size text check (selected_size in ('S', 'M', 'L')),
-	florist_note text
+	images jsonb not null default '{}'::jsonb
 );
 
 alter table public.flower_jobs enable row level security;
