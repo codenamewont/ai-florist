@@ -1,6 +1,7 @@
 import { env } from '$env/dynamic/private';
 import OpenAI, { toFile } from 'openai';
 import {
+	extractPaddedBouquetFrame,
 	frameToBouquetOutput,
 	padMaskToOpenAIRequestSize,
 	padToOpenAIRequestSize,
@@ -71,9 +72,9 @@ export async function generateOpenAIImage(prompt) {
  * @returns {Promise<import('../flowerFlow/jobStore.js').GeneratedImage>}
  */
 export async function editOpenAIImage(prompt, sourceImage, mask = null) {
-	const paddedSource = await padToOpenAIRequestSize(
-		Buffer.from(sourceImage.base64, 'base64')
-	);
+	const sourceBuffer = Buffer.from(sourceImage.base64, 'base64');
+	const normalizedSource = await frameToBouquetOutput(sourceBuffer);
+	const paddedSource = await padToOpenAIRequestSize(normalizedSource);
 	const imageFile = await toFile(paddedSource, 'bouquet.png', { type: 'image/png' });
 
 	/** @type {import('openai').default.Images.ImageEditParams} */
@@ -86,15 +87,21 @@ export async function editOpenAIImage(prompt, sourceImage, mask = null) {
 	};
 
 	if (mask) {
-		const paddedMask = await padMaskToOpenAIRequestSize(Buffer.from(mask.base64, 'base64'));
-		params.mask = await toFile(paddedMask, 'mask.png', { type: 'image/png' });
+		params.mask = await toFile(
+			await padMaskToOpenAIRequestSize(Buffer.from(mask.base64, 'base64')),
+			'mask.png',
+			{ type: 'image/png' }
+		);
+		params.input_fidelity = 'high';
 	}
 
 	const response = await getOpenAIClient().images.edit(params);
-	const framed = await frameToBouquetOutput(await readImageBytes(response.data));
+	const editedFrame = mask
+		? await extractPaddedBouquetFrame(await readImageBytes(response.data))
+		: await frameToBouquetOutput(await readImageBytes(response.data));
 
 	return {
 		mimeType: 'image/png',
-		base64: framed.toString('base64')
+		base64: editedFrame.toString('base64')
 	};
 }

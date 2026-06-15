@@ -72,6 +72,35 @@ export async function padToOpenAIRequestSize(buffer) {
 }
 
 /**
+ * Reverse {@link padToOpenAIRequestSize} — extract the 768×1024 bouquet from a padded API result.
+ * @param {Buffer} buffer
+ * @returns {Promise<Buffer>}
+ */
+export async function extractPaddedBouquetFrame(buffer) {
+	const meta = await sharp(buffer).metadata();
+	const width = meta.width ?? 0;
+	const height = meta.height ?? 0;
+
+	if (width === BOUQUET_OUTPUT_WIDTH && height === BOUQUET_OUTPUT_HEIGHT) {
+		return buffer;
+	}
+
+	if (width === OPENAI_REQUEST_WIDTH && height === OPENAI_REQUEST_HEIGHT) {
+		return sharp(buffer)
+			.extract({
+				left: PAD_LEFT,
+				top: PAD_TOP,
+				width: BOUQUET_OUTPUT_WIDTH,
+				height: BOUQUET_OUTPUT_HEIGHT
+			})
+			.png()
+			.toBuffer();
+	}
+
+	return frameToBouquetOutput(buffer);
+}
+
+/**
  * Pad an OpenAI edit mask (transparent=edit, opaque=preserve) to the request canvas.
  * @param {Buffer} maskBuffer
  * @returns {Promise<Buffer>}
@@ -82,7 +111,12 @@ export async function padMaskToOpenAIRequestSize(maskBuffer) {
 		return maskBuffer;
 	}
 
-	return sharp(maskBuffer)
+	const sized = await sharp(maskBuffer)
+		.resize(BOUQUET_OUTPUT_WIDTH, BOUQUET_OUTPUT_HEIGHT, { fit: 'fill' })
+		.png()
+		.toBuffer();
+
+	return sharp(sized)
 		.extend({
 			top: PAD_TOP,
 			bottom: PAD_TOP,

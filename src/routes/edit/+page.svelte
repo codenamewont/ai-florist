@@ -74,13 +74,31 @@
 	});
 
 	/**
+	 * Map pointer position to image-relative 0–100% coords.
+	 * Compensates for object-contain letterboxing inside the overlay SVG box.
 	 * @param {PointerEvent} event
 	 */
 	function getPoint(event) {
-		const rect = /** @type {SVGElement} */ (event.currentTarget).getBoundingClientRect();
+		const svg = /** @type {SVGElement} */ (event.currentTarget);
+		const rect = svg.getBoundingClientRect();
+		const img = svg.parentElement?.querySelector('img');
+
+		if (!img?.naturalWidth || !img.naturalHeight) {
+			return {
+				x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)),
+				y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100))
+			};
+		}
+
+		const scale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+		const contentWidth = img.naturalWidth * scale;
+		const contentHeight = img.naturalHeight * scale;
+		const offsetX = (rect.width - contentWidth) / 2;
+		const offsetY = (rect.height - contentHeight) / 2;
+
 		return {
-			x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)),
-			y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100))
+			x: Math.max(0, Math.min(100, ((event.clientX - rect.left - offsetX) / contentWidth) * 100)),
+			y: Math.max(0, Math.min(100, ((event.clientY - rect.top - offsetY) / contentHeight) * 100))
 		};
 	}
 

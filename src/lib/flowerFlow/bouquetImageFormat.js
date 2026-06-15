@@ -78,6 +78,35 @@ export function formatStrictBouquetImagePrompt(recipe) {
  */
 export function formatBouquetEditPrompt(options) {
 	const { userPrompt, mode, selection, recipe, recipeChanged = false } = options;
+	const isAreaEdit = mode === 'area' && selection && selection.length >= 3;
+
+	if (isAreaEdit) {
+		return [
+			'You are editing the attached florist bouquet photograph with a binary mask.',
+			'This is a localized inpainting edit — NOT a full bouquet redesign or re-render.',
+			'',
+			`Edit request (masked region only): ${userPrompt}`,
+			'',
+			'How to edit inside the mask:',
+			'- Apply the edit request only to whatever is inside the transparent mask region (flowers, ribbon, wrapping, foliage, etc.)',
+			'- The request may be a color/style tweak OR a content swap — e.g. replace blooms in this area with roses, change ribbon color, adjust wrapping',
+			'- When swapping flowers inside the mask, render the requested species naturally in that region; blend stems, lighting, and edges with the surrounding bouquet',
+			'- Keep realistic material detail — petal texture, fabric folds, paper creases, shadows, and lighting — seamless with the rest of the photo',
+			'- Do not paste a flat color block; the edited area should look naturally photographed',
+			'- Do not use solid black unless the user explicitly asked for black',
+			'',
+			'Mask rules (mandatory):',
+			'- Transparent pixels in the attached mask = the ONLY area you may change',
+			'- Opaque pixels in the mask = leave completely unchanged',
+			'- Do NOT recolor, restyle, brighten, blur, regenerate, or swap species outside the mask',
+			'- Do NOT apply the edit request to the whole image',
+			'',
+			'Preserve everywhere outside the mask:',
+			'- All flowers, foliage, wrapping, ribbon, background, lighting, and framing exactly as in the input photo',
+			'',
+			'Output exactly one edited photo. No before/after collage.'
+		].join('\n');
+	}
 
 	const lines = [
 		'You are editing the attached florist bouquet photograph.',
@@ -100,15 +129,6 @@ export function formatBouquetEditPrompt(options) {
 
 	if (recipe) {
 		lines.push('', formatStrictRecipeConstraints(recipe));
-	}
-
-	if (mode === 'area' && selection && selection.length >= 3) {
-		lines.push(
-			'',
-			'Apply the edit ONLY inside the marked region shown in the attached mask image.',
-			'White area in the mask = edit zone. Black area = do not change.',
-			'Leave everything outside the marked region pixel-accurate to the original photo.'
-		);
 	}
 
 	lines.push(

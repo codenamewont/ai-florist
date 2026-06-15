@@ -159,6 +159,8 @@ Return JSON only with the same schema:
 Rules:
 - Change only what the edit request implies; keep unrelated fields the same.
 - Use ONLY exact candidate names from the catalog lists above. Do not invent, rename, or substitute flowers.
+- If the edit only changes ribbon color, wrapping look, or other local styling without adding/removing/swapping flower species, keep mainFlowers, subFlowers, and greenery identical.
+- For localized masked edits (prompt mentions "selected region" or "masked edit"): update flower lists only when the request adds, removes, or swaps a species in that region (e.g. "change this part to roses"); otherwise keep mainFlowers, subFlowers, and greenery identical.
 - mainFlowers must come from candidates.main only (1-2 items).
 - subFlowers must combine candidates.filler and/or candidates.line only (1-4 items total).
 - greenery must come from candidates.foliage only (1-2 items).
