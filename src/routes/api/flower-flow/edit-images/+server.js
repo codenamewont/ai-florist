@@ -1,12 +1,17 @@
 import { requireJob, updateJob } from '$lib/server/flowerFlow/jobStore.js';
 import { loadGeneratedImageBytes } from '$lib/server/flowerFlow/loadGeneratedImage.js';
-import { buildAreaEditMask } from '$lib/server/flowerFlow/selectionMask.js';
+import { buildRefinedAreaEditMask } from '$lib/server/flowerFlow/refinedAreaMask.js';
 import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
+import { inferAreaEditTarget } from '$lib/flowerFlow/areaEditIntent.js';
 import { formatBouquetEditPrompt } from '$lib/flowerFlow/bouquetImageFormat.js';
 import { normalizeRecipeLists } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 import { editBouquetImage, isImageGenerationConfigured } from '$lib/server/gemini/image.js';
 import { applyRecipeEdit } from '$lib/server/gemini/text.js';
-import { frameToBouquetOutput } from '$lib/server/openai/bouquetImageFrame.js';
+import {
+	BOUQUET_OUTPUT_HEIGHT,
+	BOUQUET_OUTPUT_WIDTH,
+	frameToBouquetOutput
+} from '$lib/server/openai/bouquetImageFrame.js';
 import { RATE_LIMITS } from '$lib/server/rateLimit.js';
 import { enforceRateLimit, json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
 
@@ -43,14 +48,6 @@ function editForJob(jobId, job, instruction) {
 
 	const task = (async () => {
 		const priorRecipe = normalizeRecipeLists(job.recipe);
-		const recipeEditPrompt =
-			instruction.mode === 'area'
-				? `Localized masked edit (selected region of the photo only): ${instruction.prompt}`
-				: instruction.prompt;
-		const updatedRecipe = normalizeRecipeLists(
-			await applyRecipeEdit(job.recipe, recipeEditPrompt)
-		);
-		const recipeChanged = JSON.stringify(updatedRecipe) !== JSON.stringify(priorRecipe);
 
 		const sourceImage = await loadGeneratedImageBytes(job.images.primary);
 		const normalizedBytes = await frameToBouquetOutput(
@@ -62,21 +59,51 @@ function editForJob(jobId, job, instruction) {
 			mimeType: 'image/png'
 		};
 
+		const areaEditContext =
+			instruction.mode === 'area'
+				? inferAreaEditTarget({
+						userPrompt: instruction.prompt,
+						selection: instruction.selection,
+						imageWidth: BOUQUET_OUTPUT_WIDTH,
+						imageHeight: BOUQUET_OUTPUT_HEIGHT
+					})
+				: null;
+
+		const recipeEditPrompt =
+			instruction.mode === 'area' && areaEditContext
+				? `Localized masked edit (${areaEditContext.targetObject} only): ${areaEditContext.normalizedPrompt}`
+				: instruction.prompt;
+
+		const updatedRecipe = normalizeRecipeLists(
+			await applyRecipeEdit(job.recipe, recipeEditPrompt)
+		);
+		const recipeChanged = JSON.stringify(updatedRecipe) !== JSON.stringify(priorRecipe);
+
 		const editPrompt = formatBouquetEditPrompt({
 			userPrompt: instruction.prompt,
 			mode: instruction.mode,
 			selection: instruction.selection,
 			recipe: updatedRecipe,
-			recipeChanged
+			recipeChanged,
+			targetObject: areaEditContext?.targetObject,
+			normalizedPrompt: areaEditContext?.normalizedPrompt
 		});
 
 		const mask =
-			instruction.mode === 'area' && instruction.selection.length >= 3
-				? buildAreaEditMask(normalizedSource, instruction.selection)
+			instruction.mode === 'area' && instruction.selection.length >= 3 && areaEditContext
+				? await buildRefinedAreaEditMask(
+						normalizedSource,
+						instruction.selection,
+						areaEditContext
+					)
 				: null;
 
 		console.log(
-			`[flower-flow] edit-images job=${jobId.slice(0, 8)} mode=${instruction.mode}${mask ? ' (masked)' : ''} → editing...`
+			`[flower-flow] edit-images job=${jobId.slice(0, 8)} mode=${instruction.mode}${
+				mask
+					? ` (refined mask target=${areaEditContext?.targetObject} editPx=${mask.editPixelCount}/${mask.rawPolygonPixelCount})`
+					: ''
+			} → editing...`
 		);
 		const generatedImage = await editBouquetImage(normalizedSource, editPrompt, { mask });
 		const images = await uploadGeneratedImages(
