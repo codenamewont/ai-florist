@@ -10,7 +10,8 @@ import {
 	isImageGenerationConfigured
 } from '$lib/server/gemini/image.js';
 import { applyRecipeEdit } from '$lib/server/gemini/text.js';
-import { json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
+import { RATE_LIMITS } from '$lib/server/rateLimit.js';
+import { enforceRateLimit, json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
 
 /**
  * @param {unknown} value
@@ -28,9 +29,79 @@ function isPointArray(value) {
 	);
 }
 
+/**
+ * Dedupe concurrent edits for the same job (double-submit / rapid clicks).
+ * @type {Map<string, Promise<{ recipe: import('$lib/server/flowerFlow/jobStore.js').BouquetRecipe, imagePrompt: string, images: { primary: import('$lib/server/flowerFlow/jobStore.js').GeneratedImage } }>>}
+ */
+const inFlight = new Map();
+
+/**
+ * @param {string} jobId
+ * @param {import('$lib/server/flowerFlow/jobStore.js').FlowerJob} job
+ * @param {{ mode: 'area' | 'whole', prompt: string, selection: Array<{ x: number, y: number }> }} instruction
+ */
+function editForJob(jobId, job, instruction) {
+	const existing = inFlight.get(jobId);
+	if (existing) return existing;
+
+	const task = (async () => {
+		const priorRecipe = normalizeRecipeLists(job.recipe);
+		const updatedRecipe = await applyRecipeEdit(job.recipe, instruction.prompt);
+		const recipeChanged = JSON.stringify(updatedRecipe) !== JSON.stringify(priorRecipe);
+
+		const sourceImage = await loadGeneratedImageBytes(job.images.primary);
+		const editPrompt = formatBouquetEditPrompt({
+			userPrompt: instruction.prompt,
+			mode: instruction.mode,
+			selection: instruction.selection,
+			recipe: updatedRecipe,
+			recipeChanged
+		});
+
+		const provider = getImageProvider();
+		const mask =
+			instruction.mode === 'area' && instruction.selection.length >= 3
+				? buildAreaEditMask(
+						sourceImage,
+						instruction.selection,
+						provider === 'gemini' ? 'gemini' : 'openai'
+					)
+				: null;
+
+		console.log(
+			`[flower-flow] edit-images job=${jobId.slice(0, 8)} provider=${provider} mode=${instruction.mode}${mask ? ' (masked)' : ''} → editing...`
+		);
+		const generatedImage = await editBouquetImage(sourceImage, editPrompt, { mask });
+		const images = await uploadGeneratedImages(
+			jobId,
+			generatedImage,
+			`edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+		);
+		await updateJob(jobId, {
+			recipe: updatedRecipe,
+			imagePrompt: editPrompt,
+			images,
+			floristNote: null
+		});
+		console.log(
+			`[flower-flow] edit-images job=${jobId.slice(0, 8)} OK (mock=${!isImageGenerationConfigured()})`
+		);
+
+		return { recipe: updatedRecipe, imagePrompt: editPrompt, images };
+	})().finally(() => {
+		inFlight.delete(jobId);
+	});
+
+	inFlight.set(jobId, task);
+	return task;
+}
+
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request }) {
+export async function POST({ request, getClientAddress }) {
 	try {
+		const limited = enforceRateLimit(getClientAddress(), RATE_LIMITS.imageEdit, 'edit-images');
+		if (limited) return limited;
+
 		const body = await readJsonBody(request);
 		const jobId = typeof body.jobId === 'string' ? body.jobId : '';
 		const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
@@ -62,48 +133,16 @@ export async function POST({ request }) {
 			);
 		}
 
-		const priorRecipe = normalizeRecipeLists(job.recipe);
-		const updatedRecipe = await applyRecipeEdit(job.recipe, prompt);
-		const recipeChanged = JSON.stringify(updatedRecipe) !== JSON.stringify(priorRecipe);
-
-		const sourceImage = await loadGeneratedImageBytes(job.images.primary);
-		const editPrompt = formatBouquetEditPrompt({
-			userPrompt: prompt,
+		const { recipe, imagePrompt, images } = await editForJob(jobId, job, {
 			mode,
-			selection,
-			recipe: updatedRecipe,
-			recipeChanged
+			prompt,
+			selection
 		});
-
-		const provider = getImageProvider();
-		const mask =
-			mode === 'area' && selection.length >= 3
-				? buildAreaEditMask(sourceImage, selection, provider === 'gemini' ? 'gemini' : 'openai')
-				: null;
-
-		console.log(
-			`[flower-flow] edit-images job=${jobId.slice(0, 8)} provider=${provider} mode=${mode}${mask ? ' (masked)' : ''} → editing...`
-		);
-		const generatedImage = await editBouquetImage(sourceImage, editPrompt, { mask });
-		const images = await uploadGeneratedImages(
-			jobId,
-			generatedImage,
-			`edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-		);
-		await updateJob(jobId, {
-			recipe: updatedRecipe,
-			imagePrompt: editPrompt,
-			images,
-			floristNote: null
-		});
-		console.log(
-			`[flower-flow] edit-images job=${jobId.slice(0, 8)} OK (mock=${!isImageGenerationConfigured()})`
-		);
 
 		return json({
 			jobId,
-			recipe: updatedRecipe,
-			imagePrompt: editPrompt,
+			recipe,
+			imagePrompt,
 			images,
 			mock: !isImageGenerationConfigured()
 		});
