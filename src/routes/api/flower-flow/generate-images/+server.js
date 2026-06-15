@@ -1,4 +1,5 @@
 import { requireJob, updateJob } from '$lib/server/flowerFlow/jobStore.js';
+import { normalizeRecipeLists } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 import { buildImagePrompt } from '$lib/server/gemini/text.js';
 import {
 	generateBouquetImage,
@@ -29,11 +30,12 @@ function generateForJob(jobId, recipe) {
 	if (existing) return existing;
 
 	const task = (async () => {
-		const imagePrompt = await buildImagePrompt(recipe);
+		const normalizedRecipe = normalizeRecipeLists(recipe);
+		const imagePrompt = await buildImagePrompt(normalizedRecipe);
 		const generatedImage = await generateBouquetImage(imagePrompt);
 		const images = await uploadGeneratedImages(jobId, generatedImage, `initial-${Date.now()}`);
-		await updateJob(jobId, { imagePrompt, images });
-		return { imagePrompt, images };
+		await updateJob(jobId, { imagePrompt, images, recipe: normalizedRecipe });
+		return { imagePrompt, images, recipe: normalizedRecipe };
 	})().finally(() => {
 		inFlight.delete(jobId);
 	});
@@ -73,7 +75,7 @@ export async function POST({ request }) {
 		console.log(
 			`[flower-flow] generate-images job=${jobId.slice(0, 8)} provider=${getImageProvider()} → generating...`
 		);
-		const { imagePrompt, images } = await generateForJob(jobId, job.recipe);
+		const { imagePrompt, images, recipe: savedRecipe } = await generateForJob(jobId, job.recipe);
 		console.log(
 			`[flower-flow] generate-images job=${jobId.slice(0, 8)} OK (mock=${!isImageGenerationConfigured()})`
 		);
@@ -82,6 +84,7 @@ export async function POST({ request }) {
 			jobId,
 			imagePrompt,
 			images,
+			recipe: savedRecipe,
 			mock: !isImageGenerationConfigured()
 		});
 	} catch (error) {

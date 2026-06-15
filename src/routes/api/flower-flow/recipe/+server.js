@@ -1,4 +1,5 @@
 import { requireJob, updateJob } from '$lib/server/flowerFlow/jobStore.js';
+import { normalizeRecipeLists } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 import { buildBouquetRecipe } from '$lib/server/gemini/text.js';
 import { isGeminiConfigured } from '$lib/server/gemini/client.js';
 import { json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
@@ -26,7 +27,9 @@ export async function POST({ request }) {
 		}
 
 		const currentJob = await requireJob(jobId);
-		const recipe = await buildBouquetRecipe(currentJob.moodAnalysis, currentJob.userInput);
+		const recipe = normalizeRecipeLists(
+			await buildBouquetRecipe(currentJob.moodAnalysis, currentJob.userInput)
+		);
 		await updateJob(jobId, { recipe });
 
 		return json({

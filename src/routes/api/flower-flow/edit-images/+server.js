@@ -1,11 +1,15 @@
 import { requireJob, updateJob } from '$lib/server/flowerFlow/jobStore.js';
+import { loadGeneratedImageBytes } from '$lib/server/flowerFlow/loadGeneratedImage.js';
+import { buildAreaEditMask } from '$lib/server/flowerFlow/selectionMask.js';
 import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
+import { formatBouquetEditPrompt } from '$lib/flowerFlow/bouquetImageFormat.js';
+import { normalizeRecipeLists } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 import {
-	generateBouquetImage,
+	editBouquetImage,
 	getImageProvider,
 	isImageGenerationConfigured
 } from '$lib/server/gemini/image.js';
-import { buildImagePrompt, applyRecipeEdit } from '$lib/server/gemini/text.js';
+import { applyRecipeEdit } from '$lib/server/gemini/text.js';
 import { json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
 
 /**
@@ -22,29 +26,6 @@ function isPointArray(value) {
 				typeof point.y === 'number'
 		)
 	);
-}
-
-/**
- * @param {{ mode: string, prompt: string, selection: unknown }} instruction
- */
-function describeEditInstruction(instruction) {
-	const lines = [
-		'EDIT REQUEST:',
-		instruction.prompt,
-		'',
-		'This is a refinement of one existing bouquet photo, not a new collage.',
-		'Preserve the same bouquet concept, camera angle, background, wrapping style, and realistic florist photography unless the edit request explicitly says otherwise.',
-		'Output exactly one bouquet in a single composition. Never show two bouquets, side-by-side views, comparison panels, or duplicated arrangements.'
-	];
-
-	if (instruction.mode === 'area') {
-		lines.push(
-			'The user drew a target area on the image. Apply the edit only to that visual region as much as possible, while keeping the rest of the bouquet unchanged.',
-			`Selection points are normalized image coordinates: ${JSON.stringify(instruction.selection)}`
-		);
-	}
-
-	return lines.join('\n');
 }
 
 /** @type {import('./$types').RequestHandler} */
@@ -74,14 +55,37 @@ export async function POST({ request }) {
 			return json({ error: 'recipe is missing. Run recipe first.', code: 'bad_request' }, 400);
 		}
 
+		if (!job.images?.primary) {
+			return json({ error: 'bouquet image is missing. Generate images first.', code: 'bad_request' }, 400);
+		}
+
+		const priorRecipe = normalizeRecipeLists(job.recipe);
 		const updatedRecipe = await applyRecipeEdit(job.recipe, prompt);
-		const basePrompt = job.imagePrompt ?? (await buildImagePrompt(updatedRecipe));
-		const editPrompt = `${basePrompt}\n\n${describeEditInstruction({ mode, prompt, selection })}`;
+		const recipeChanged = JSON.stringify(updatedRecipe) !== JSON.stringify(priorRecipe);
+
+		const sourceImage = await loadGeneratedImageBytes(job.images.primary);
+		const editPrompt = formatBouquetEditPrompt({
+			userPrompt: prompt,
+			mode,
+			selection,
+			recipe: updatedRecipe,
+			recipeChanged
+		});
+
+		const provider = getImageProvider();
+		const mask =
+			mode === 'area' && selection.length >= 3
+				? buildAreaEditMask(
+						sourceImage,
+						selection,
+						provider === 'gemini' ? 'gemini' : 'openai'
+					)
+				: null;
 
 		console.log(
-			`[flower-flow] edit-images job=${jobId.slice(0, 8)} provider=${getImageProvider()} mode=${mode} → generating...`
+			`[flower-flow] edit-images job=${jobId.slice(0, 8)} provider=${provider} mode=${mode}${mask ? ' (masked)' : ''} → editing...`
 		);
-		const generatedImage = await generateBouquetImage(editPrompt, { edit: true });
+		const generatedImage = await editBouquetImage(sourceImage, editPrompt, { mask });
 		const images = await uploadGeneratedImages(
 			jobId,
 			generatedImage,

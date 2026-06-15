@@ -42,11 +42,57 @@ function matchCatalogFlower(label) {
 }
 
 /**
+ * Cap recipe flower lists to florist-realistic counts and demote extra mains to sub.
+ * @param {{ mainFlowers?: string[], subFlowers?: string[], greenery?: string[] }} recipe
+ */
+export function normalizeRecipeLists(recipe) {
+	if (!recipe) return recipe;
+
+	/** @type {string[]} */
+	const main = [...(recipe.mainFlowers ?? [])].filter(Boolean);
+	/** @type {string[]} */
+	let sub = [...(recipe.subFlowers ?? [])].filter(Boolean);
+	/** @type {string[]} */
+	const greenery = [...(recipe.greenery ?? [])].filter(Boolean);
+
+	/** @param {string} label */
+	const catalogId = (label) => matchCatalogFlower(label)?.id ?? null;
+
+	/** @param {string} label @param {string[]} list */
+	const listHasLabel = (label, list) => {
+		const id = catalogId(label);
+		if (id == null) {
+			const normalized = normalizeName(label);
+			return list.some((entry) => normalizeName(entry) === normalized);
+		}
+
+		return list.some((entry) => catalogId(entry) === id);
+	};
+
+	while (main.length > 2) {
+		const extra = main.pop();
+		if (!extra || listHasLabel(extra, sub) || listHasLabel(extra, greenery)) continue;
+
+		if (sub.length < 4) {
+			sub.unshift(extra);
+		}
+	}
+
+	return {
+		...recipe,
+		mainFlowers: main,
+		subFlowers: sub.slice(0, 4),
+		greenery: greenery.slice(0, 2)
+	};
+}
+
+/**
  * @param {{ mainFlowers?: string[], subFlowers?: string[], greenery?: string[] } | null | undefined} recipe
  * @param {(id: number) => string} getImageSrc
  * @returns {RecipeFlowerCard[]}
  */
 export function resolveRecipeFlowers(recipe, getImageSrc) {
+	const normalized = normalizeRecipeLists(recipe ?? {});
 	if (!recipe) return [];
 
 	/** @type {RecipeFlowerCard[]} */
@@ -77,9 +123,9 @@ export function resolveRecipeFlowers(recipe, getImageSrc) {
 		}
 	};
 
-	addFlowers(recipe.mainFlowers, 'main');
-	addFlowers(recipe.subFlowers, 'sub');
-	addFlowers(recipe.greenery, 'greenery');
+	addFlowers(normalized.mainFlowers, 'main');
+	addFlowers(normalized.subFlowers, 'sub');
+	addFlowers(normalized.greenery, 'greenery');
 
 	return cards;
 }
@@ -104,6 +150,17 @@ export function truncateDescription(text, maxLength = 140) {
 function pickKeywords(items, limit = 2) {
 	if (!items?.length) return '';
 	return items.filter(Boolean).slice(0, limit).join(', ');
+}
+
+/** @param {string} value */
+function isHexColor(value) {
+	return /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value.trim());
+}
+
+/** @param {string[] | undefined} colorPalette @param {number} [limit=2] */
+function pickMoodColors(colorPalette, limit = 2) {
+	const names = (colorPalette ?? []).filter((color) => color && !isHexColor(color));
+	return pickKeywords(names, limit);
 }
 
 /**
@@ -153,16 +210,17 @@ function getPrimaryFlowerFromRecipe(recipe) {
  * @param {{ mainFlowers?: string[] } | null | undefined} recipe
  */
 export function buildBouquetRationale(moodAnalysis, userInput, recipe) {
+	const normalized = normalizeRecipeLists(recipe ?? {});
 	const recipient = userInput?.relationship?.trim();
 	const subject = recipient ? `${recipient}'s` : 'The';
 	const cardMessage = extractCardMessage(userInput);
-	const mainFlower = getPrimaryFlowerFromRecipe(recipe);
+	const mainFlower = getPrimaryFlowerFromRecipe(normalized);
 
 	const mood = pickKeywords(
 		[...(moodAnalysis?.moodKeywords ?? []), ...(moodAnalysis?.styleImpression ?? [])],
 		2
 	);
-	const colors = pickKeywords(moodAnalysis?.colorPalette, 2);
+	const colors = pickMoodColors(moodAnalysis?.colorPalette, 2);
 
 	/** @type {string[]} */
 	const parts = [];

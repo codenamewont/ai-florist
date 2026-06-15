@@ -1,4 +1,5 @@
 <script>
+	import { onMount } from 'svelte';
 	import FloristOrderMessage from './FloristOrderMessage.svelte';
 	import KakaoMap from './KakaoMap.svelte';
 	import ShopList from './ShopList.svelte';
@@ -19,9 +20,14 @@
 		onrefresh
 	} = $props();
 
-	let mapCenterLat = $state(initialLat);
-	let mapCenterLng = $state(initialLng);
+	let mapCenterLat = $state(DEFAULT_MAP_CENTER.lat);
+	let mapCenterLng = $state(DEFAULT_MAP_CENTER.lng);
 	let panTarget = $state(null);
+
+	onMount(() => {
+		mapCenterLat = initialLat;
+		mapCenterLng = initialLng;
+	});
 
 	function handleCenterChange(lat, lng) {
 		mapCenterLat = lat;

@@ -25,7 +25,7 @@
 		mobile: row · desktop: 꽃 슬롯 높이 고정 → 설명 카드 길이와 무관하게 Y·크기 유지
 	-->
 	<div
-		class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-row items-start gap-8 px-6 py-6 lg:flex-col lg:items-center lg:justify-start lg:gap-4 lg:px-6 lg:pb-8 lg:pt-[calc(50%-5rem)]"
+		class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-row items-start gap-8 px-6 pt-6 pb-8 lg:flex-col lg:items-center lg:justify-start lg:gap-4 lg:px-6 lg:pb-12 lg:pt-[calc(50%-5rem)]"
 	>
 		<div
 			class="flex h-[11rem] shrink-0 items-end justify-center sm:h-[13rem] lg:h-[min(24rem,36vh)] lg:w-full"

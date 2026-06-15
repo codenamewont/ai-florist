@@ -3,9 +3,10 @@
 /** @typedef {import('../flowerFlow/jobStore.js').UserInput} UserInput */
 
 import { matchFlowersFromMood } from '../flowerFlow/flowerDB.js';
-import { BOUQUET_IMAGE_ASPECT_PROMPT } from '../../flowerFlow/bouquetImageFormat.js';
+import { formatStrictBouquetImagePrompt } from '../../flowerFlow/bouquetImageFormat.js';
+import { normalizeRecipeLists } from '../../flowerFlow/resolveRecipeFlowers.js';
 import { getTextModel, isGeminiConfigured, parseJsonFromText } from './client.js';
-import { mockRecipe } from './mock.js';
+import { mockApplyRecipeEdit, mockRecipe } from './mock.js';
 
 /**
  * @param {MoodAnalysis} mood
@@ -19,7 +20,7 @@ export async function buildBouquetRecipe(mood, userInput = {}) {
 		: 'around ₩50,000';
 
 	if (!isGeminiConfigured()) {
-		return mockRecipe(userInput);
+		return normalizeRecipeLists(mockRecipe(userInput));
 	}
 
 	const model = getTextModel();
@@ -67,7 +68,7 @@ Rules:
 - Budget should be ${budget}.`;
 
 	const result = await model.generateContent(prompt);
-	return /** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text()));
+	return normalizeRecipeLists(/** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text())));
 }
 
 /**
@@ -75,29 +76,7 @@ Rules:
  * @returns {Promise<string>}
  */
 export async function buildImagePrompt(recipe) {
-	if (!isGeminiConfigured()) {
-		const { mockImagePrompt } = await import('./mock.js');
-		return mockImagePrompt(recipe);
-	}
-
-	const model = getTextModel();
-	const prompt = `Write one detailed image generation prompt for a realistic florist bouquet.
-Use this recipe:
-${JSON.stringify(recipe, null, 2)}
-
-Rules:
-- Real flowers only — use the exact flower names from the recipe
-- mainFlowers are the focal blooms; subFlowers add volume and line; greenery frames the bouquet
-- No fantasy colors or surreal shapes
-- White background, soft natural lighting
-- Korean florist style
-- Describe bouquet composition only (flower types, colors, wrapping, mood)
-- ${BOUQUET_IMAGE_ASPECT_PROMPT}
-- Do NOT specify alternate size variants; generate one final customer preview image
-- Return plain text only, no markdown`;
-
-	const result = await model.generateContent(prompt);
-	return result.response.text().trim();
+	return formatStrictBouquetImagePrompt(recipe);
 }
 
 /**
@@ -131,8 +110,7 @@ Return plain text only.`;
  */
 export async function applyRecipeEdit(recipe, editPrompt) {
 	if (!isGeminiConfigured()) {
-		const { mockApplyRecipeEdit } = await import('./mock.js');
-		return mockApplyRecipeEdit(recipe, editPrompt);
+		return normalizeRecipeLists(mockApplyRecipeEdit(recipe, editPrompt));
 	}
 
 	const model = getTextModel();
@@ -160,8 +138,11 @@ Return JSON only with the same schema:
 Rules:
 - Change only what the edit request implies; keep unrelated fields the same.
 - Use realistic florist flower names.
-- mainFlowers, subFlowers, and greenery must stay consistent with the edit.`;
+- If the edit changes flower types (swap, add, remove, or replace), update mainFlowers, subFlowers, and/or greenery so the recipe matches exactly.
+- Flower swaps (e.g. "change tulip to rose") must update the matching list entry; new flowers must use standard catalog names.
+- mainFlowers: 1-2 items. subFlowers: 1-4 items. greenery: 1-2 items.
+- The updated recipe is the sole source of truth for the next bouquet image — every listed flower must be included in the image prompt.`;
 
 	const result = await model.generateContent(prompt);
-	return /** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text()));
+	return normalizeRecipeLists(/** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text())));
 }

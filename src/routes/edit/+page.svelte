@@ -337,7 +337,7 @@
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<section
-			class="flex min-h-0 w-full shrink-0 flex-col border-b border-line px-6 py-6 lg:w-[44%] lg:border-r lg:border-b-0 lg:px-10 lg:py-8"
+			class="flex min-h-0 w-full shrink-0 flex-col border-b border-line px-6 py-6 lg:w-[44%] lg:border-r lg:border-b-0 lg:px-10 lg:py-8 lg:pb-12"
 		>
 			<div class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-col items-center justify-center gap-6">
 				<div class="w-full max-w-24 overflow-hidden bg-track shadow-sm ring-1 ring-black/5 sm:max-w-28 lg:max-w-75">
