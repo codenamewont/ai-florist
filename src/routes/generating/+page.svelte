@@ -5,7 +5,7 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import GenerationActivityFeed from '$lib/components/ui/generating/GenerationActivityFeed.svelte';
-	import { buildRecipe, generateImages } from '$lib/flowerFlow/api.js';
+	import { buildRecipe, generateImages, waitForMoodAnalysis } from '$lib/flowerFlow/api.js';
 	import {
 		createGenerationProgress,
 		DEFAULT_ESTIMATED_MS,
@@ -142,6 +142,15 @@
 		try {
 			const estimatedMs = flow.mock ? MOCK_ESTIMATED_MS : DEFAULT_ESTIMATED_MS;
 			progress.begin({ estimatedMs });
+
+			if (!getFlowObject('moodAnalysis')) {
+				const moodAnalysis = await runWithRetry('Analyzing mood', () =>
+					waitForMoodAnalysis(jobId, {
+						onUpdate: (job) => saveFlow({ moodAnalysis: job.moodAnalysis, mock: job.mock })
+					})
+				);
+				saveFlow({ moodAnalysis });
+			}
 
 			const existingRecipe = getFlowObject('recipe');
 			if (!existingRecipe) {

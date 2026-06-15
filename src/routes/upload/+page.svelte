@@ -32,7 +32,7 @@
 		location: false
 	});
 	let snsHasImage = $state(false);
-	let loading = $state(false);
+	let submitting = $state(false);
 	let error = $state('');
 
 	const recipientLabel = $derived.by(() => {
@@ -153,7 +153,7 @@
 		error = '';
 
 		const flow = loadFlow();
-		if (flow.jobId && flow.moodAnalysis) {
+		if (flow.jobId) {
 			// Dev Fill 후 바로 message로 넘어갈 때 더미 플래그가 남지 않도록 정리
 			deleteFlowKey('devUpload');
 			deleteFlowKey('devSeeded');
@@ -167,7 +167,7 @@
 			return;
 		}
 
-		loading = true;
+		submitting = true;
 
 		try {
 			const result = await analyzeMood(primaryFile, userInput);
@@ -177,7 +177,7 @@
 			deleteFlowKey('cardMessage');
 			saveFlow({
 				jobId: result.jobId,
-				moodAnalysis: result.moodAnalysis,
+				moodAnalysis: result.moodAnalysis ?? null,
 				recipe: null,
 				imagePrompt: null,
 				images: null,
@@ -188,7 +188,7 @@
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Upload failed';
 		} finally {
-			loading = false;
+			submitting = false;
 		}
 	}
 </script>
@@ -262,11 +262,11 @@
 
 				<button
 					type="button"
-					disabled={loading}
+					disabled={submitting}
 					onclick={continueToMessage}
 					class={FLOW_CONTINUE_BUTTON}
 				>
-					{loading ? 'Analyzing mood...' : 'Continue to message ->'}
+					Continue to message ->
 				</button>
 			</FlowContinueBar>
 		</section>
