@@ -5,7 +5,7 @@
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MoodboardGrid from '$lib/components/ui/upload/MoodboardGrid.svelte';
 	import SnsFeedUpload from '$lib/components/ui/upload/SnsFeedUpload.svelte';
-	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowNav from '$lib/components/ui/FlowNav.svelte';
 	import { analyzeMood } from '$lib/flowerFlow/api.js';
 	import {
 		deleteFlowKey,
@@ -14,24 +14,33 @@
 		loadFlow,
 		saveFlow
 	} from '$lib/flowerFlow/session.js';
+	import {
+		readMoodboardFiles,
+		readPrimaryUploadFile,
+		readSnsFile,
+		readUploadDraftMode,
+		writeUploadDraftMode
+	} from '$lib/flowerFlow/uploadDraft.js';
 
 	const savedFlow = loadFlow();
 	const userInput = getFlowUserInput();
 
 	const devUpload = savedFlow.devUpload;
+	const cachedMoodboard = readMoodboardFiles();
+	const savedUploadMode = readUploadDraftMode();
 	let mode = $state(
 		isDevSeeded() && devUpload?.active && typeof devUpload.mode === 'string'
 			? devUpload.mode
-			: 'moodboard'
+			: savedUploadMode
 	);
-	let primaryFile = $state(null);
+	let primaryFile = $state(readPrimaryUploadFile());
 	let moodboardTiles = $state({
-		color: false,
-		season: false,
-		character: false,
-		location: false
+		color: !!cachedMoodboard.color,
+		season: !!cachedMoodboard.season,
+		character: !!cachedMoodboard.character,
+		location: !!cachedMoodboard.location
 	});
-	let snsHasImage = $state(false);
+	let snsHasImage = $state(!!readSnsFile());
 	let submitting = $state(false);
 	let error = $state('');
 
@@ -149,6 +158,10 @@
 		return 'create2';
 	});
 
+	$effect(() => {
+		writeUploadDraftMode(mode);
+	});
+
 	async function continueToMessage() {
 		error = '';
 
@@ -160,6 +173,10 @@
 			deleteFlowKey('cardMessage');
 			await goto(resolve('/message'));
 			return;
+		}
+
+		if (!primaryFile) {
+			primaryFile = readPrimaryUploadFile();
 		}
 
 		if (!primaryFile) {
@@ -197,6 +214,11 @@
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
 	<Header step={2} total={7} />
+	<FlowNav
+		backHref="/create"
+		onContinue={continueToMessage}
+		continueDisabled={submitting}
+	/>
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork
@@ -207,8 +229,14 @@
 		/>
 
 		<section
-			class="relative flex min-h-0 flex-1 flex-col pt-4 pb-[3.75rem] lg:grid lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:overflow-hidden lg:pt-6 lg:pb-8"
+			class="relative flex min-h-0 flex-1 flex-col pt-4 lg:grid lg:grid-rows-[auto_minmax(0,1fr)] lg:overflow-hidden lg:pt-6 lg:pb-8"
 		>
+			{#if error}
+				<p class="mx-4 mb-3 rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5 lg:mx-6">
+					{error}
+				</p>
+			{/if}
+
 			<div class="mb-3 flex shrink-0 justify-center px-4 lg:mb-4 lg:px-6">
 				<div
 					class="relative grid w-full max-w-[15rem] grid-cols-2 items-center rounded-full bg-white p-1 shadow-md ring-1 ring-black/5"
@@ -252,23 +280,6 @@
 			{:else}
 				<SnsFeedUpload bind:primaryFile bind:hasImage={snsHasImage} />
 			{/if}
-
-			<FlowContinueBar>
-				{#if error}
-					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
-						{error}
-					</p>
-				{/if}
-
-				<button
-					type="button"
-					disabled={submitting}
-					onclick={continueToMessage}
-					class={FLOW_CONTINUE_BUTTON}
-				>
-					Continue to message ->
-				</button>
-			</FlowContinueBar>
 		</section>
 	</main>
 </div>

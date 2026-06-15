@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
+	import FlowNav from '$lib/components/ui/FlowNav.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import GenerationActivityFeed from '$lib/components/ui/generating/GenerationActivityFeed.svelte';
 	import { buildRecipe, generateImages, waitForMoodAnalysis } from '$lib/flowerFlow/api.js';
@@ -208,10 +209,6 @@
 		runGeneration();
 	}
 
-	function backToMessage() {
-		goto(resolve('/message'));
-	}
-
 	onMount(() => {
 		active = true;
 		progress = createGenerationProgress((index) => {
@@ -232,6 +229,7 @@
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
 	<Header step={4} total={7} />
+	<FlowNav backHref="/message" showContinue={false} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork
@@ -249,7 +247,6 @@
 				{retryLabel}
 				{canRetry}
 				onRetry={retry}
-				onBack={backToMessage}
 			/>
 		</section>
 	</main>

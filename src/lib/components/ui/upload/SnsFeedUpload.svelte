@@ -3,10 +3,11 @@
 	import UploadTile from './UploadTile.svelte';
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
+	import { readSnsFile, writeSnsFile } from '$lib/flowerFlow/uploadDraft.js';
 
 	let { primaryFile = $bindable(null), hasImage = $bindable() } = $props();
 
-	let firstFile = $state(null);
+	let firstFile = $state(readSnsFile());
 
 	$effect(() => {
 		const next = firstFile ?? null;
@@ -16,6 +17,10 @@
 	$effect(() => {
 		const next = !!firstFile;
 		if (hasImage !== next) hasImage = next;
+	});
+
+	$effect(() => {
+		writeSnsFile(firstFile);
 	});
 
 	onMount(async () => {
@@ -29,7 +34,7 @@
 			const files = await hydrateDevUpload(/** @type {Record<string, string>} */ (tiles));
 			if (files.first) firstFile = files.first;
 		} catch {
-			// dev seed 실패 시 빈 타일 유지
+			// dev seed 실패 시 캐시/빈 타일 유지
 		}
 	});
 </script>

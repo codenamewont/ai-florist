@@ -5,7 +5,7 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import BouquetFlowerCarousel from '$lib/components/ui/result/BouquetFlowerCarousel.svelte';
-	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowNav from '$lib/components/ui/FlowNav.svelte';
 	import { fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { getFlowerImageSrc } from '$lib/flowerFlow/flowerImagePaths.js';
 	import {
@@ -55,6 +55,11 @@
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
 	<Header step={6} total={7} />
+	<FlowNav
+		backHref="/edit"
+		onContinue={() => goto(resolve('/map'))}
+		showContinue={!loading && !error}
+	/>
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork
@@ -65,7 +70,7 @@
 			downloadImage={selectedImage}
 		/>
 
-		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
+		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-hidden lg:pb-8">
 			<div
 				class="flex min-h-0 flex-1 flex-col justify-center overflow-hidden px-6 py-6 lg:px-8 lg:py-8"
 			>
@@ -81,14 +86,6 @@
 					<BouquetFlowerCarousel flowers={bouquetFlowers} />
 				{/if}
 			</div>
-
-			{#if !loading && !error}
-				<FlowContinueBar>
-					<button type="button" onclick={() => goto(resolve('/map'))} class={FLOW_CONTINUE_BUTTON}>
-						Continue to map ->
-					</button>
-				</FlowContinueBar>
-			{/if}
 		</section>
 	</main>
 </div>

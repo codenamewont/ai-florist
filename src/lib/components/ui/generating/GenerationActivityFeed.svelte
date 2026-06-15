@@ -8,8 +8,7 @@
 		error = '',
 		retryLabel = '',
 		canRetry = false,
-		onRetry = () => {},
-		onBack = () => {}
+		onRetry = () => {}
 	} = $props();
 
 	/**
@@ -51,13 +50,6 @@
 						Try again
 					</button>
 				{/if}
-				<button
-					type="button"
-					class="border border-pill px-4 py-2 text-sm text-ink"
-					onclick={onBack}
-				>
-					Back to message
-				</button>
 			</div>
 		</div>
 	{/if}

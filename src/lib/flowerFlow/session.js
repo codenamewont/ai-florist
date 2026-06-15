@@ -62,6 +62,37 @@ export function getFlowUserInput() {
 }
 
 /**
+ * @returns {{ who: string | null, whatFor: string | null, style: string | null, budget: number }}
+ */
+export function readCreateFormFromFlow() {
+	const input = getFlowUserInput();
+
+	return {
+		who: typeof input.relationship === 'string' ? input.relationship : null,
+		whatFor: typeof input.occasion === 'string' ? input.occasion : null,
+		style: typeof input.style === 'string' ? input.style : null,
+		budget: typeof input.budget === 'number' ? input.budget : 50_000
+	};
+}
+
+/**
+ * @param {{ who: string | null, whatFor: string | null, style: string | null, budget: number }} form
+ */
+export function saveCreateFormToFlow(form) {
+	const existing = getFlowObject('userInput') ?? {};
+
+	saveFlow({
+		userInput: {
+			...existing,
+			relationship: form.who ?? undefined,
+			occasion: form.whatFor ?? undefined,
+			style: form.style ?? undefined,
+			budget: Number(form.budget)
+		}
+	});
+}
+
+/**
  * Dev Fill 직후 create에 1회만 더미 폼 적용. 없으면 null 반환.
  * @returns {{ who: string | null, whatFor: string | null, style: string | null, budget: number } | null}
  */

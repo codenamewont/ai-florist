@@ -3,7 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DescriptionCard from '$lib/components/ui/Artwork/DescriptionCard.svelte';
-	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowNav from '$lib/components/ui/FlowNav.svelte';
+	import EditComposerBar from '$lib/components/ui/edit/EditComposerBar.svelte';
 	import Header from '$lib/components/ui/Header.svelte';
 	import { editImages, fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { buildBriefBouquetTitle } from '$lib/flowerFlow/resolveRecipeFlowers.js';
@@ -334,6 +335,11 @@
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
 	<Header step={5} total={7} />
+	<FlowNav
+		backHref="/message"
+		onContinue={continueToResult}
+		continueDisabled={editing}
+	/>
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<section
@@ -408,7 +414,7 @@
 				</div>
 			</div>
 
-			<FlowContinueBar class="!space-y-1.5 lg:mx-auto lg:w-full lg:max-w-2xl">
+			<EditComposerBar>
 				<div class="flex w-full flex-wrap gap-1.5">
 					{#each QUICK_PROMPTS as quickPrompt (quickPrompt)}
 						<button
@@ -470,16 +476,7 @@
 						{/if}
 					</button>
 				</div>
-
-				<button
-					type="button"
-					disabled={editing}
-					onclick={continueToResult}
-					class={FLOW_CONTINUE_BUTTON}
-				>
-					Continue to result ->
-				</button>
-			</FlowContinueBar>
+			</EditComposerBar>
 		</section>
 	</main>
 </div>
