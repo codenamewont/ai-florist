@@ -24,8 +24,9 @@
 	/** @type {ReturnType<typeof window.kakao.maps.InfoWindow> | null} */
 	let infoWindow = null;
 	// 마커↔가게 내부 장부. 템플릿에서 반응형으로 읽지 않으므로 일반 Map 사용.
-	// (effect 안에서 읽고/쓰는 SvelteMap이면 무한 업데이트 루프가 발생함)
+	// SvelteMap이면 markers $effect가 같은 맵을 읽고/쓰며 무한 루프(effect_update_depth_exceeded)가 남.
 	/** @type {Map<string, { marker: ReturnType<typeof window.kakao.maps.Marker>; shop: (typeof shops)[number] }>} */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- 의도적 비반응형: 위 설명 참고
 	let shopMarkerMap = new Map();
 
 	function relayoutMap() {
