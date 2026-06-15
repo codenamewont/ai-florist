@@ -5,6 +5,14 @@ export const BOUQUET_IMAGE_ASPECT = '3:4';
 export const BOUQUET_IMAGE_ASPECT_PROMPT =
 	'Vertical portrait composition with a 3:4 aspect ratio (width:height). Frame the full bouquet without cropping stems or wrapping.';
 
+/** 최초 generate prompt opening — catalog 톤·장면 설정 */
+export const BOUQUET_CATALOG_SCENE_PROMPT =
+	'A professional florist product photograph of a handcrafted bouquet, photographed for a premium flower shop catalog.';
+
+/** generate + whole edit 공통 — 인물/손 노출 방지 */
+export const BOUQUET_NO_PERSON_CONSTRAINT =
+	'Bouquet only. No person. No hands. No body parts visible.';
+
 /**
  * @param {{ mainFlowers?: string[], subFlowers?: string[], greenery?: string[] }} recipe
  */
@@ -47,6 +55,7 @@ export function formatStrictRecipeConstraints(recipe) {
 		'- Include EVERY listed flower without omission — each must be clearly visible; none may be missing, hidden, or left out',
 		'- Do not swap or substitute any listed species unless the edit request explicitly requires that change',
 		'- Real cut flowers only; no fantasy colors or impossible hybrids',
+		`- ${BOUQUET_NO_PERSON_CONSTRAINT}`,
 		`- ${BOUQUET_IMAGE_ASPECT_PROMPT}`,
 		'- White background, soft natural lighting, front-facing, orderable from a real Korean florist'
 	].join('\n');
@@ -60,6 +69,7 @@ export function formatStrictRecipeConstraints(recipe) {
 export function formatStrictBouquetImagePrompt(recipe) {
 	return [
 		'Generate a realistic Korean florist bouquet product photo.',
+		BOUQUET_CATALOG_SCENE_PROMPT,
 		'',
 		formatStrictRecipeConstraints(recipe)
 	].join('\n');
