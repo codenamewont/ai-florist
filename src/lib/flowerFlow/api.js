@@ -107,6 +107,33 @@ export async function fetchJob(jobId) {
 }
 
 /**
+ * Poll until mood analysis is stored on the job.
+ * @param {string} jobId
+ * @param {{ intervalMs?: number, timeoutMs?: number, onUpdate?: (job: Awaited<ReturnType<typeof fetchJob>>) => void }} [options]
+ */
+export async function waitForMoodAnalysis(jobId, options = {}) {
+	const intervalMs = options.intervalMs ?? 1_000;
+	const timeoutMs = options.timeoutMs ?? 90_000;
+	const started = Date.now();
+
+	while (Date.now() - started < timeoutMs) {
+		const job = await fetchJob(jobId);
+
+		if (job.moodAnalysis) {
+			options.onUpdate?.(job);
+			return job.moodAnalysis;
+		}
+
+		await new Promise((resolve) => setTimeout(resolve, intervalMs));
+	}
+
+	throw new GenerationError('Mood analysis is taking longer than expected. Please try again.', {
+		code: 'mood_analysis_timeout',
+		retryable: true
+	});
+}
+
+/**
  * @param {{ mimeType?: string, base64?: string, url?: string } | null | undefined} image
  */
 export function toDataUrl(image) {

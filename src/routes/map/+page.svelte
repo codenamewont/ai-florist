@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
+	import FlowNav from '$lib/components/ui/FlowNav.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MapPanel from '$lib/components/ui/map/MapPanel.svelte';
 	import { fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
@@ -124,12 +125,14 @@
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
 	<Header step={7} total={7} />
+	<FlowNav backHref="/result" showContinue={false} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork
 			title={artworkTitle}
 			description={artworkDescription}
 			imageSrc={bouquetImageSrc}
+			downloadImage={selectedImage}
 			cardMode={artworkCardMode}
 		/>
 

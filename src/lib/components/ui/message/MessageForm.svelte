@@ -21,7 +21,7 @@
 			placeholder="Write something from your heart"
 			rows="1"
 			aria-label="Write your message"
-			class="w-full resize-none border-none bg-transparent text-3xl leading-relaxed font-light text-ink placeholder:text-muted focus:outline-none md:text-4xl lg:text-[2.75rem]"
+			class="w-full resize-none border-none bg-transparent text-2xl leading-relaxed font-light text-ink placeholder:text-muted focus:outline-none md:text-3xl lg:text-[2rem]"
 		></textarea>
 		<div class="mt-6 border-b border-pill lg:mt-3"></div>
 	</header>

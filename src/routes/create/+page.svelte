@@ -5,21 +5,24 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import ContextForm from '$lib/components/ui/create/ContextForm.svelte';
-	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowNav from '$lib/components/ui/FlowNav.svelte';
 	import {
 		consumeDevCreateSnapshot,
 		deleteFlowKey,
 		getFlowObject,
 		isDevSeeded,
+		readCreateFormFromFlow,
+		saveCreateFormToFlow,
 		saveFlow
 	} from '$lib/flowerFlow/session.js';
 	import { ARTWORK_CARD_DEFAULTS } from '$lib/flowerFlow/artworkCardCopy.js';
 
-	// 항상 빈 폼으로 시작 — Dev Fill은 onMount에서 1회만 스냅샷 적용
-	let who = $state(null);
-	let whatFor = $state(null);
-	let style = $state(null);
-	let budget = $state(50_000);
+	// sessionStorage에 저장된 값으로 시작 — Dev Fill은 onMount에서 1회 덮어씀
+	const initialForm = readCreateFormFromFlow();
+	let who = $state(initialForm.who);
+	let whatFor = $state(initialForm.whatFor);
+	let style = $state(initialForm.style);
+	let budget = $state(initialForm.budget);
 
 	const hasAnySelection = $derived(who !== null || whatFor !== null || style !== null);
 
@@ -60,6 +63,10 @@
 		}
 	});
 
+	$effect(() => {
+		saveCreateFormToFlow({ who, whatFor, style, budget });
+	});
+
 	function handleContinue() {
 		deleteFlowKey('devUpload');
 		deleteFlowKey('devSeeded');
@@ -86,6 +93,7 @@
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
 	<Header step={1} total={7} />
+	<FlowNav backHref="/" onContinue={handleContinue} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork
@@ -95,16 +103,10 @@
 			cardMode={artworkCardMode}
 		/>
 
-		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
+		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-hidden lg:pb-8">
 			<div class="min-h-0 flex-1 overflow-y-auto">
 				<ContextForm bind:who bind:whatFor bind:style bind:budget />
 			</div>
-
-			<FlowContinueBar>
-				<button type="button" onclick={handleContinue} class={FLOW_CONTINUE_BUTTON}>
-					Continue to upload ->
-				</button>
-			</FlowContinueBar>
 		</section>
 	</main>
 </div>

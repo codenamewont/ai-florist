@@ -19,12 +19,12 @@
 <div class="flex flex-1 flex-col justify-center px-6 py-10 md:px-12 lg:px-16 lg:py-16">
 	<header class="mb-10 space-y-3 lg:mb-14">
 		{#if !hasAnySelection}
-			<h1 class="text-3xl leading-relaxed font-light text-muted md:text-4xl lg:text-[2.75rem]">
+			<h1 class="text-2xl leading-relaxed font-light text-muted md:text-3xl lg:text-[2rem]">
 				Who are we making flowers for?
 			</h1>
 			<p class="text-sm text-muted">Pick a few details below</p>
 		{:else}
-			<h1 class="text-3xl leading-tight font-light text-muted md:text-4xl lg:text-[2.75rem]">
+			<h1 class="text-2xl leading-tight font-light text-muted md:text-3xl lg:text-[2rem]">
 				{#if whatFor}
 					A <span class="font-semibold text-ink underline decoration-ink/30 underline-offset-4"
 						>{whatFor}</span

@@ -3,13 +3,15 @@
 	import UploadTile from './UploadTile.svelte';
 	import { hydrateDevUpload } from '$lib/dev/hydrateUpload.js';
 	import { getFlowObject, isDevSeeded } from '$lib/flowerFlow/session.js';
+	import { readMoodboardFiles, writeMoodboardFiles } from '$lib/flowerFlow/uploadDraft.js';
 
 	let { primaryFile = $bindable(null), uploadedTiles = $bindable() } = $props();
 
-	let colorFile = $state(null);
-	let seasonFile = $state(null);
-	let characterFile = $state(null);
-	let locationFile = $state(null);
+	const cached = readMoodboardFiles();
+	let colorFile = $state(cached.color);
+	let seasonFile = $state(cached.season);
+	let characterFile = $state(cached.character);
+	let locationFile = $state(cached.location);
 
 	$effect(() => {
 		const next = colorFile ?? seasonFile ?? characterFile ?? locationFile ?? null;
@@ -34,6 +36,15 @@
 		}
 	});
 
+	$effect(() => {
+		writeMoodboardFiles({
+			color: colorFile,
+			season: seasonFile,
+			character: characterFile,
+			location: locationFile
+		});
+	});
+
 	onMount(async () => {
 		const devUpload = getFlowObject('devUpload');
 		if (!isDevSeeded() || !devUpload?.active) return;
@@ -48,7 +59,7 @@
 			if (files.character) characterFile = files.character;
 			if (files.location) locationFile = files.location;
 		} catch {
-			// dev seed 실패 시 빈 타일 유지
+			// dev seed 실패 시 캐시/빈 타일 유지
 		}
 	});
 </script>

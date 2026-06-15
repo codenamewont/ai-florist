@@ -6,12 +6,13 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MessageForm from '$lib/components/ui/message/MessageForm.svelte';
-	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowNav from '$lib/components/ui/FlowNav.svelte';
 	import { skipDevImages } from '$lib/flowerFlow/devSeed.js';
 	import {
 		consumeDevMessageSnapshot,
 		deleteFlowKey,
 		getFlowObject,
+		getFlowString,
 		getFlowUserInput,
 		isDevSeeded,
 		loadFlow,
@@ -21,8 +22,8 @@
 
 	const userInput = getFlowUserInput();
 
-	// 항상 빈 메시지로 시작 — Dev Fill은 onMount에서 1회만 스냅샷 적용
-	let message = $state('');
+	// sessionStorage에 저장된 값으로 시작 — Dev Fill은 onMount에서 1회 덮어씀
+	let message = $state(getFlowString('cardMessage'));
 	let error = $state('');
 	let skipping = $state(false);
 
@@ -53,6 +54,10 @@
 			deleteFlowKey('devUpload');
 			deleteFlowKey('cardMessage');
 		}
+	});
+
+	$effect(() => {
+		saveFlow({ cardMessage: message });
 	});
 
 	function handleContinue() {
@@ -110,6 +115,7 @@
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
 	<Header step={3} total={7} />
+	<FlowNav backHref="/upload" onContinue={handleContinue} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<Artwork
@@ -119,32 +125,28 @@
 			cardMode={artworkCardMode}
 		/>
 
-		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
+		<section class="relative flex min-h-0 flex-1 flex-col lg:overflow-hidden lg:pb-8">
 			<div class="min-h-0 flex-1 overflow-y-auto">
-				<MessageForm bind:message />
-			</div>
-
-			<FlowContinueBar>
 				{#if error}
-					<p class="rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5">
+					<p class="mx-6 mb-4 rounded bg-surface/95 px-3 py-2 text-sm text-red-600 ring-1 ring-black/5 lg:mx-8">
 						{error}
 					</p>
 				{/if}
 				{#if dev}
-					<button
-						type="button"
-						disabled={skipping}
-						onclick={skipWithDummyImages}
-						class="w-full rounded border border-dashed border-subtle/60 px-4 py-2.5 text-xs text-muted hover:border-subtle hover:text-ink disabled:opacity-50 lg:w-auto"
-						title="AI 생성 없이 더미 이미지로 edit로 이동 (개발용)"
-					>
-						{skipping ? 'Skipping…' : 'Dev: Skip to edit (dummy images)'}
-					</button>
+					<div class="px-6 pt-4 lg:px-8">
+						<button
+							type="button"
+							disabled={skipping}
+							onclick={skipWithDummyImages}
+							class="rounded border border-dashed border-subtle/60 px-4 py-2.5 text-xs text-muted hover:border-subtle hover:text-ink disabled:opacity-50"
+							title="AI 생성 없이 더미 이미지로 edit로 이동 (개발용)"
+						>
+							{skipping ? 'Skipping…' : 'Dev: Skip to edit (dummy images)'}
+						</button>
+					</div>
 				{/if}
-				<button type="button" onclick={handleContinue} class={FLOW_CONTINUE_BUTTON}>
-					Continue to generating ->
-				</button>
-			</FlowContinueBar>
+				<MessageForm bind:message />
+			</div>
 		</section>
 	</main>
 </div>

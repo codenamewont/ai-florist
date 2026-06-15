@@ -5,6 +5,21 @@ import { RATE_LIMITS } from '$lib/server/rateLimit.js';
 import { MAX_MOOD_IMAGE_BYTES, MAX_MOOD_IMAGE_LABEL } from '$lib/server/uploadLimits.js';
 import { enforceRateLimit, json, readUserInput, toErrorResponse } from '$lib/server/http.js';
 
+/**
+ * @param {string} jobId
+ * @param {Uint8Array} imageBytes
+ * @param {string} mimeType
+ * @param {Record<string, unknown>} userInput
+ */
+async function runMoodAnalysis(jobId, imageBytes, mimeType, userInput) {
+	try {
+		const moodAnalysis = await analyzeImageMood(imageBytes, mimeType, userInput);
+		await updateJob(jobId, { moodAnalysis });
+	} catch (error) {
+		console.error(`Background mood analysis failed for job ${jobId}`, error);
+	}
+}
+
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ request, getClientAddress }) {
 	try {
@@ -31,13 +46,14 @@ export async function POST({ request, getClientAddress }) {
 		const userInput = readUserInput(formData);
 		const job = await createJob(userInput);
 		const imageBytes = new Uint8Array(await image.arrayBuffer());
-		const moodAnalysis = await analyzeImageMood(imageBytes, image.type || 'image/jpeg', userInput);
+		const mimeType = image.type || 'image/jpeg';
 
-		await updateJob(job.id, { moodAnalysis });
+		void runMoodAnalysis(job.id, imageBytes, mimeType, userInput);
 
 		return json({
 			jobId: job.id,
-			moodAnalysis,
+			moodAnalysis: null,
+			pending: true,
 			mock: !isGeminiConfigured()
 		});
 	} catch (error) {
