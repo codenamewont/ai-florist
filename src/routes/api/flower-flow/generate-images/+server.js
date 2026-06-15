@@ -1,11 +1,7 @@
 import { requireJob, updateJob } from '$lib/server/flowerFlow/jobStore.js';
 import { normalizeRecipeLists } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 import { buildImagePrompt } from '$lib/server/gemini/text.js';
-import {
-	generateBouquetImage,
-	getImageProvider,
-	isImageGenerationConfigured
-} from '$lib/server/gemini/image.js';
+import { generateBouquetImage, isImageGenerationConfigured } from '$lib/server/gemini/image.js';
 import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
 import { RATE_LIMITS } from '$lib/server/rateLimit.js';
 import { json, readJsonBody, enforceRateLimit, toErrorResponse } from '$lib/server/http.js';
@@ -80,9 +76,7 @@ export async function POST({ request, getClientAddress }) {
 			});
 		}
 
-		console.log(
-			`[flower-flow] generate-images job=${jobId.slice(0, 8)} provider=${getImageProvider()} → generating...`
-		);
+		console.log(`[flower-flow] generate-images job=${jobId.slice(0, 8)} → generating...`);
 		const { imagePrompt, images, recipe: savedRecipe } = await generateForJob(jobId, job.recipe);
 		console.log(
 			`[flower-flow] generate-images job=${jobId.slice(0, 8)} OK (mock=${!isImageGenerationConfigured()})`

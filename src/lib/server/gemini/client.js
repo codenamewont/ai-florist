@@ -31,12 +31,6 @@ export function getVisionModel() {
 	});
 }
 
-export function getImageModel() {
-	return getClient().getGenerativeModel({
-		model: env.GEMINI_IMAGE_MODEL || 'gemini-3.1-flash-image'
-	});
-}
-
 /**
  * @param {string} text
  */

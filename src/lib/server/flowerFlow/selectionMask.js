@@ -179,53 +179,13 @@ export function buildOpenAIEditMask(width, height, selection) {
 }
 
 /**
- * Visual mask for Gemini: white polygon on black = edit region.
- * @param {number} width
- * @param {number} height
- * @param {Array<{ x: number, y: number }>} selection
- */
-export function buildGeminiEditMask(width, height, selection) {
-	const polygon = closePolygon(
-		selection.map((point) => ({
-			x: (point.x / 100) * width,
-			y: (point.y / 100) * height
-		}))
-	);
-
-	const rgba = new Uint8Array(width * height * 4);
-	for (let y = 0; y < height; y += 1) {
-		for (let x = 0; x < width; x += 1) {
-			const index = (y * width + x) * 4;
-			const inside = pointInPolygon(x + 0.5, y + 0.5, polygon);
-			if (inside) {
-				rgba[index] = 255;
-				rgba[index + 1] = 255;
-				rgba[index + 2] = 255;
-				rgba[index + 3] = 255;
-			} else {
-				rgba[index] = 0;
-				rgba[index + 1] = 0;
-				rgba[index + 2] = 0;
-				rgba[index + 3] = 255;
-			}
-		}
-	}
-
-	return encodePng(width, height, rgba);
-}
-
-/**
  * @param {{ base64: string, mimeType: string }} sourceImage
  * @param {Array<{ x: number, y: number }>} selection
- * @param {'openai' | 'gemini'} provider
  */
-export function buildAreaEditMask(sourceImage, selection, provider) {
+export function buildAreaEditMask(sourceImage, selection) {
 	const buffer = Buffer.from(sourceImage.base64, 'base64');
 	const { width, height } = readImageDimensions(buffer, sourceImage.mimeType);
-	const maskBuffer =
-		provider === 'gemini'
-			? buildGeminiEditMask(width, height, selection)
-			: buildOpenAIEditMask(width, height, selection);
+	const maskBuffer = buildOpenAIEditMask(width, height, selection);
 
 	return {
 		base64: maskBuffer.toString('base64'),

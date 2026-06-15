@@ -1,5 +1,11 @@
 import { env } from '$env/dynamic/private';
 import OpenAI, { toFile } from 'openai';
+import {
+	frameToBouquetOutput,
+	padMaskToOpenAIRequestSize,
+	padToOpenAIRequestSize,
+	OPENAI_REQUEST_SIZE
+} from './bouquetImageFrame.js';
 
 let client = null;
 
@@ -20,6 +26,25 @@ function getOpenAIClient() {
 }
 
 /**
+ * @param {import('openai').Images.ImagesResponse['data']} data
+ * @returns {Promise<Buffer>}
+ */
+async function readImageBytes(data) {
+	const image = data?.[0];
+
+	if (image?.b64_json) {
+		return Buffer.from(image.b64_json, 'base64');
+	}
+
+	if (image?.url) {
+		const imageResponse = await fetch(image.url);
+		return Buffer.from(await imageResponse.arrayBuffer());
+	}
+
+	throw new Error('OpenAI image model did not return image data');
+}
+
+/**
  * @param {string} prompt
  * @returns {Promise<import('../flowerFlow/jobStore.js').GeneratedImage>}
  */
@@ -27,30 +52,16 @@ export async function generateOpenAIImage(prompt) {
 	const response = await getOpenAIClient().images.generate({
 		model: env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
 		prompt,
-		size: env.OPENAI_IMAGE_SIZE || '1024x1536',
+		size: OPENAI_REQUEST_SIZE,
 		n: 1
 	});
 
-	const image = response.data?.[0];
+	const framed = await frameToBouquetOutput(await readImageBytes(response.data));
 
-	if (image?.b64_json) {
-		return {
-			mimeType: 'image/png',
-			base64: image.b64_json
-		};
-	}
-
-	if (image?.url) {
-		const imageResponse = await fetch(image.url);
-		const bytes = new Uint8Array(await imageResponse.arrayBuffer());
-
-		return {
-			mimeType: imageResponse.headers.get('content-type') || 'image/png',
-			base64: Buffer.from(bytes).toString('base64')
-		};
-	}
-
-	throw new Error('OpenAI image model did not return image data');
+	return {
+		mimeType: 'image/png',
+		base64: framed.toString('base64')
+	};
 }
 
 /**
@@ -60,45 +71,30 @@ export async function generateOpenAIImage(prompt) {
  * @returns {Promise<import('../flowerFlow/jobStore.js').GeneratedImage>}
  */
 export async function editOpenAIImage(prompt, sourceImage, mask = null) {
-	const buffer = Buffer.from(sourceImage.base64, 'base64');
-	const imageFile = await toFile(buffer, 'bouquet.png', { type: sourceImage.mimeType });
+	const paddedSource = await padToOpenAIRequestSize(
+		Buffer.from(sourceImage.base64, 'base64')
+	);
+	const imageFile = await toFile(paddedSource, 'bouquet.png', { type: 'image/png' });
 
 	/** @type {import('openai').default.Images.ImageEditParams} */
 	const params = {
 		model: env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
 		image: imageFile,
 		prompt,
-		size: env.OPENAI_IMAGE_SIZE || '1024x1536',
+		size: OPENAI_REQUEST_SIZE,
 		n: 1
 	};
 
 	if (mask) {
-		const maskFile = await toFile(Buffer.from(mask.base64, 'base64'), 'mask.png', {
-			type: 'image/png'
-		});
-		params.mask = maskFile;
+		const paddedMask = await padMaskToOpenAIRequestSize(Buffer.from(mask.base64, 'base64'));
+		params.mask = await toFile(paddedMask, 'mask.png', { type: 'image/png' });
 	}
 
 	const response = await getOpenAIClient().images.edit(params);
+	const framed = await frameToBouquetOutput(await readImageBytes(response.data));
 
-	const image = response.data?.[0];
-
-	if (image?.b64_json) {
-		return {
-			mimeType: 'image/png',
-			base64: image.b64_json
-		};
-	}
-
-	if (image?.url) {
-		const imageResponse = await fetch(image.url);
-		const bytes = new Uint8Array(await imageResponse.arrayBuffer());
-
-		return {
-			mimeType: imageResponse.headers.get('content-type') || 'image/png',
-			base64: Buffer.from(bytes).toString('base64')
-		};
-	}
-
-	throw new Error('OpenAI image edit did not return image data');
+	return {
+		mimeType: 'image/png',
+		base64: framed.toString('base64')
+	};
 }

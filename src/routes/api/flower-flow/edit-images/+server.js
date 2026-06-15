@@ -4,11 +4,7 @@ import { buildAreaEditMask } from '$lib/server/flowerFlow/selectionMask.js';
 import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
 import { formatBouquetEditPrompt } from '$lib/flowerFlow/bouquetImageFormat.js';
 import { normalizeRecipeLists } from '$lib/flowerFlow/resolveRecipeFlowers.js';
-import {
-	editBouquetImage,
-	getImageProvider,
-	isImageGenerationConfigured
-} from '$lib/server/gemini/image.js';
+import { editBouquetImage, isImageGenerationConfigured } from '$lib/server/gemini/image.js';
 import { applyRecipeEdit } from '$lib/server/gemini/text.js';
 import { RATE_LIMITS } from '$lib/server/rateLimit.js';
 import { enforceRateLimit, json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
@@ -58,18 +54,13 @@ function editForJob(jobId, job, instruction) {
 			recipeChanged
 		});
 
-		const provider = getImageProvider();
 		const mask =
 			instruction.mode === 'area' && instruction.selection.length >= 3
-				? buildAreaEditMask(
-						sourceImage,
-						instruction.selection,
-						provider === 'gemini' ? 'gemini' : 'openai'
-					)
+				? buildAreaEditMask(sourceImage, instruction.selection)
 				: null;
 
 		console.log(
-			`[flower-flow] edit-images job=${jobId.slice(0, 8)} provider=${provider} mode=${instruction.mode}${mask ? ' (masked)' : ''} → editing...`
+			`[flower-flow] edit-images job=${jobId.slice(0, 8)} mode=${instruction.mode}${mask ? ' (masked)' : ''} → editing...`
 		);
 		const generatedImage = await editBouquetImage(sourceImage, editPrompt, { mask });
 		const images = await uploadGeneratedImages(

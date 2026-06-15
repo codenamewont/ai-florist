@@ -66,7 +66,7 @@ export function mockGeneratedImage(label = 'Bouquet') {
 	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="768" height="1024" viewBox="0 0 768 1024">
 		<rect width="768" height="1024" fill="#f7f3ef"/>
 		<text x="50%" y="48%" text-anchor="middle" font-size="42" fill="#6b5b53" font-family="Arial">Mock ${label}</text>
-		<text x="50%" y="54%" text-anchor="middle" font-size="22" fill="#9a8d84" font-family="Arial">Set GEMINI_API_KEY for real images</text>
+		<text x="50%" y="54%" text-anchor="middle" font-size="22" fill="#9a8d84" font-family="Arial">Set OPENAI_API_KEY for real images</text>
 	</svg>`;
 
 	return {
