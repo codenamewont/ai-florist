@@ -20,22 +20,48 @@ function primaryName(name) {
 }
 
 /**
- * Match a recipe flower string (e.g. "Pink tulip") to a catalog entry.
+ * Match a recipe flower string (e.g. "Pink tulip") to one catalog entry.
+ * Exact / primary-name matches first; modifier + species only as a last resort.
  * @param {string} label
  * @returns {(typeof flowerCatalogLite)[number] | null}
  */
-function matchCatalogFlower(label) {
+export function matchCatalogFlower(label) {
+	if (!label?.trim()) return null;
+
 	const normalized = normalizeName(label);
 
 	for (const flower of flowerCatalogLite) {
-		const catalogPrimary = primaryName(flower.name);
-		if (
-			normalized === catalogPrimary ||
-			normalized.includes(catalogPrimary) ||
-			catalogPrimary.includes(normalized)
-		) {
+		if (normalized === normalizeName(flower.name)) {
 			return flower;
 		}
+	}
+
+	const labelPrimary = primaryName(label);
+	/** @type {typeof flowerCatalogLite} */
+	const primaryMatches = [];
+
+	for (const flower of flowerCatalogLite) {
+		if (primaryName(flower.name) === labelPrimary) {
+			primaryMatches.push(flower);
+		}
+	}
+
+	if (primaryMatches.length === 1) {
+		return primaryMatches[0];
+	}
+
+	if (primaryMatches.length > 1) {
+		const exact = primaryMatches.find((flower) => normalizeName(flower.name) === normalized);
+		if (exact) return exact;
+		return primaryMatches.sort((a, b) => b.name.length - a.name.length)[0];
+	}
+
+	const bySpecificity = [...flowerCatalogLite].sort((a, b) => b.name.length - a.name.length);
+
+	for (const flower of bySpecificity) {
+		const catalogPrimary = primaryName(flower.name);
+		if (normalized === catalogPrimary) return flower;
+		if (normalized.endsWith(` ${catalogPrimary}`)) return flower;
 	}
 
 	return null;
