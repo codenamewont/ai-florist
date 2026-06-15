@@ -62,6 +62,7 @@
 			title={artworkTitle}
 			description={artworkDescription}
 			imageSrc={bouquetImageSrc}
+			downloadImage={selectedImage}
 		/>
 
 		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">

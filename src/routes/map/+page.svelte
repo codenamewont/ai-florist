@@ -130,6 +130,7 @@
 			title={artworkTitle}
 			description={artworkDescription}
 			imageSrc={bouquetImageSrc}
+			downloadImage={selectedImage}
 			cardMode={artworkCardMode}
 		/>
 
