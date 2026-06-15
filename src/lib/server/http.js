@@ -1,5 +1,6 @@
 import { JobNotFoundError } from '$lib/server/flowerFlow/jobStore.js';
 import { describeAiError } from '$lib/server/aiError.js';
+import { consumeRateLimit } from '$lib/server/rateLimit.js';
 
 /**
  * @param {unknown} error
@@ -45,12 +46,37 @@ export function toErrorResponse(error) {
 /**
  * @param {unknown} body
  * @param {number} [status]
+ * @param {Record<string, string>} [extraHeaders]
  */
-export function json(body, status = 200) {
+export function json(body, status = 200, extraHeaders = {}) {
 	return new Response(JSON.stringify(body), {
 		status,
-		headers: { 'Content-Type': 'application/json' }
+		headers: { 'Content-Type': 'application/json', ...extraHeaders }
 	});
+}
+
+/**
+ * @param {string} clientAddress
+ * @param {import('$lib/server/rateLimit.js').RateLimitConfig} config
+ * @param {string} [scope]
+ */
+export function enforceRateLimit(clientAddress, config, scope = 'api') {
+	const key = `${scope}:${clientAddress || 'unknown'}`;
+	const result = consumeRateLimit(key, config);
+
+	if (result.ok) return null;
+
+	const retryAfterSec = Math.ceil(result.retryAfterMs / 1000);
+	return json(
+		{
+			error: 'Too many requests. Please try again later.',
+			code: 'rate_limited',
+			retryable: true,
+			retryAfterMs: result.retryAfterMs
+		},
+		429,
+		{ 'Retry-After': String(retryAfterSec) }
+	);
 }
 
 /**

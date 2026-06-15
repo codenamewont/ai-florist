@@ -1,9 +1,13 @@
 import { env } from '$env/dynamic/private';
-import { json, toErrorResponse } from '$lib/server/http.js';
+import { RATE_LIMITS } from '$lib/server/rateLimit.js';
+import { enforceRateLimit, json, toErrorResponse } from '$lib/server/http.js';
 
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ url }) {
+export async function GET({ url, getClientAddress }) {
 	try {
+		const limited = enforceRateLimit(getClientAddress(), RATE_LIMITS.mapShops, 'map-shops');
+		if (limited) return limited;
+
 		const lat = Number(url.searchParams.get('lat') ?? '37.5665');
 		const lng = Number(url.searchParams.get('lng') ?? '126.978');
 
@@ -29,7 +33,18 @@ export async function GET({ url }) {
 		});
 
 		if (!response.ok) {
-			return json({ mock: true, shops: mockShops(lat, lng) });
+			const detail = await response.text().catch(() => '');
+			console.error(
+				`[map] Kakao shop search failed status=${response.status}`,
+				detail.slice(0, 300)
+			);
+			return json(
+				{
+					error: 'Flower shop search is temporarily unavailable. Please try again.',
+					code: 'map_unavailable'
+				},
+				502
+			);
 		}
 
 		const data = await response.json();

@@ -7,7 +7,8 @@ import {
 	isImageGenerationConfigured
 } from '$lib/server/gemini/image.js';
 import { uploadGeneratedImages } from '$lib/server/flowerFlow/imageStorage.js';
-import { json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
+import { RATE_LIMITS } from '$lib/server/rateLimit.js';
+import { json, readJsonBody, enforceRateLimit, toErrorResponse } from '$lib/server/http.js';
 
 /**
  * @param {import('$lib/server/flowerFlow/jobStore.js').GeneratedImage | undefined} image
@@ -45,8 +46,15 @@ function generateForJob(jobId, recipe) {
 }
 
 /** @type {import('./$types').RequestHandler} */
-export async function POST({ request }) {
+export async function POST({ request, getClientAddress }) {
 	try {
+		const limited = enforceRateLimit(
+			getClientAddress(),
+			RATE_LIMITS.imageGeneration,
+			'generate-images'
+		);
+		if (limited) return limited;
+
 		const body = await readJsonBody(request);
 		const jobId = typeof body.jobId === 'string' ? body.jobId : '';
 
