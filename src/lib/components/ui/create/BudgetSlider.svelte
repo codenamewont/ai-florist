@@ -13,7 +13,7 @@
 <div class="space-y-4">
 	<div>
 		<p class="text-xs tracking-[0.2em] text-muted uppercase">Budget</p>
-		<p class="mt-2 text-3xl font-semibold tracking-tight">
+		<p class="mt-2 text-2xl font-semibold tracking-tight">
 			₩{budget.toLocaleString('ko-KR')}
 		</p>
 	</div>

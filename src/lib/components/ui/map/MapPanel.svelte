@@ -49,7 +49,7 @@
 
 <div class="flex min-h-0 flex-1 flex-col">
 	<header class="shrink-0 px-6 py-8 md:px-10 lg:px-12 lg:py-10">
-		<h1 class="text-3xl leading-relaxed font-light text-muted md:text-4xl lg:text-[2.75rem]">
+		<h1 class="text-2xl leading-relaxed font-light text-muted md:text-3xl lg:text-[2rem]">
 			Find a nearby florist
 		</h1>
 		<p class="mt-3 text-sm text-muted">Move the map, then refresh to search this area.</p>

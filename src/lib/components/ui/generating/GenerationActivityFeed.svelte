@@ -26,7 +26,7 @@
 
 <div class="flex flex-1 flex-col justify-center px-6 py-10 md:px-12 lg:px-16 lg:py-16">
 	<header class="mb-10 space-y-3 lg:mb-14">
-		<h1 class="text-3xl leading-relaxed font-light text-muted md:text-4xl lg:text-[2.75rem]">
+		<h1 class="text-2xl leading-relaxed font-light text-muted md:text-3xl lg:text-[2rem]">
 			Creating your bouquet...
 		</h1>
 		{#if retryLabel}
