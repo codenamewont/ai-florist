@@ -3,9 +3,15 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DescriptionCard from '$lib/components/ui/Artwork/DescriptionCard.svelte';
+	import MuseumFrame from '$lib/components/ui/Artwork/MuseumFrame.svelte';
 	import FlowNav from '$lib/components/ui/FlowNav.svelte';
 	import EditComposerBar from '$lib/components/ui/edit/EditComposerBar.svelte';
 	import Header from '$lib/components/ui/Header.svelte';
+	import {
+		ARTWORK_SLOT_FLOWER,
+		ARTWORK_SLOT_WRAPPER,
+		ARTWORK_SLOT_CARD
+	} from '$lib/artwork/artworkSlotLayout.js';
 	import { editImages, fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { buildBriefBouquetTitle } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 	import { getFlowString, saveFlow } from '$lib/flowerFlow/session.js';
@@ -335,36 +341,25 @@
 	class="flex h-dvh flex-col overflow-x-hidden bg-surface text-ink lg:h-screen lg:overflow-hidden"
 >
 	<Header step={5} total={7} />
-	<FlowNav
-		backHref="/message"
-		onContinue={continueToResult}
-		continueDisabled={editing}
-	/>
+	<FlowNav backHref="/message" onContinue={continueToResult} continueDisabled={editing} />
 
 	<main class="flex min-h-0 flex-1 flex-col lg:flex-row">
 		<section
-			class="flex min-h-0 w-full shrink-0 flex-col border-b border-line px-6 py-6 lg:w-[44%] lg:border-r lg:border-b-0 lg:px-10 lg:py-8 lg:pb-12"
+			class="relative flex min-h-0 w-full shrink-0 flex-col border-b border-line lg:h-full lg:min-h-0 lg:w-[44%] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-b-0"
 		>
-			<div
-				class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-col items-center justify-center gap-6"
-			>
-				<div
-					class="w-full max-w-24 overflow-hidden bg-track shadow-sm ring-1 ring-black/5 sm:max-w-28 lg:max-w-75"
-				>
-					{#if loading}
-						<div class="aspect-[3/4] w-full animate-pulse bg-placeholder"></div>
-					{:else if imageSrc}
-						<img
-							src={imageSrc}
-							alt="Generated bouquet"
-							class="aspect-[3/4] w-full object-contain object-center"
-						/>
-					{:else}
-						<div class="aspect-[3/4] w-full bg-placeholder"></div>
-					{/if}
+			<div class={ARTWORK_SLOT_WRAPPER}>
+				<div class={ARTWORK_SLOT_FLOWER}>
+					<MuseumFrame
+						mode="bouquet"
+						imageSrc={imageSrc || null}
+						imageAlt="Generated bouquet"
+						{loading}
+					/>
 				</div>
 
-				<DescriptionCard {title} {description} />
+				<div class={ARTWORK_SLOT_CARD}>
+					<DescriptionCard {title} {description} />
+				</div>
 			</div>
 		</section>
 

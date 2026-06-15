@@ -7,10 +7,11 @@
 	const src = $derived(getArtworkSrc(variant));
 </script>
 
+<!-- MuseumFrame artwork 모드에서 크기·위치 제어. 단독 사용 시 fallback. -->
 <img
 	{src}
 	alt=""
-	class="mx-auto h-auto w-full max-w-24 shrink-0 sm:max-w-28 lg:max-w-75"
+	class="mx-auto h-auto w-full object-contain object-center"
 	width="328"
 	height="443"
 />

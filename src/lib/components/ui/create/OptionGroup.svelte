@@ -10,7 +10,7 @@
 				type="button"
 				onclick={() => onchange(option)}
 				class={[
-					'text-xl tracking-wide transition-colors',
+					'text-lg tracking-wide transition-colors',
 					selected === option ? 'text-ink' : 'text-muted hover:text-ink'
 				]}
 			>

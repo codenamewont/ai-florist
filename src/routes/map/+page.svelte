@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
@@ -84,28 +85,45 @@
 		}
 	}
 
+	function hydrateOrderFromFlow() {
+		recipe = getFlowObject('recipe');
+		moodAnalysis = getFlowObject('moodAnalysis');
+		userInput = getFlowObject('userInput');
+
+		const order = buildFloristOrderMessage({
+			userInput: { ...sessionUserInput, ...(userInput ?? {}) },
+			moodAnalysis,
+			recipe
+		});
+		orderPlainText = order.plainText;
+		orderKoPlainText = order.ko.plainText;
+	}
+
 	onMount(async () => {
 		if (!jobId) {
-			await goto(resolve('/create'));
-			return;
-		}
+			if (!dev) {
+				await goto(resolve('/create'));
+				return;
+			}
+			hydrateOrderFromFlow();
+		} else {
+			try {
+				const job = await fetchJob(jobId);
+				recipe = job.recipe ?? null;
+				moodAnalysis = job.moodAnalysis ?? null;
+				userInput = job.userInput ?? null;
+				selectedImage = job.images?.primary ?? null;
 
-		try {
-			const job = await fetchJob(jobId);
-			recipe = job.recipe ?? null;
-			moodAnalysis = job.moodAnalysis ?? null;
-			userInput = job.userInput ?? null;
-			selectedImage = job.images?.primary ?? null;
-
-			const order = buildFloristOrderMessage({
-				userInput: { ...sessionUserInput, ...job.userInput },
-				moodAnalysis: job.moodAnalysis,
-				recipe: job.recipe
-			});
-			orderPlainText = order.plainText;
-			orderKoPlainText = order.ko.plainText;
-		} catch {
-			// job 없어도 지도·꽃집 검색은 계속
+				const order = buildFloristOrderMessage({
+					userInput: { ...sessionUserInput, ...job.userInput },
+					moodAnalysis: job.moodAnalysis,
+					recipe: job.recipe
+				});
+				orderPlainText = order.plainText;
+				orderKoPlainText = order.ko.plainText;
+			} catch {
+				if (dev) hydrateOrderFromFlow();
+			}
 		}
 
 		const center = await getUserMapCenter();

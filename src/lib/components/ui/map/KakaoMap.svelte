@@ -52,12 +52,12 @@
 			? `<p style="margin:4px 0 0;font-size:12px;color:#666">${escapeHtml(shop.distance)}</p>`
 			: '';
 		const phone = shop.phone
-			? `<p style="margin:4px 0 0;font-size:12px;color:#666">${escapeHtml(shop.phone)}</p>`
+			? `<p style="display:block;margin:4px 0 0;font-size:12px;color:#666;word-break:break-all;overflow-wrap:anywhere">${escapeHtml(shop.phone)}</p>`
 			: '';
 
-		return `<div style="padding:15px 12px;min-width:200px;max-width:240px;font-family:system-ui,sans-serif;line-height:1.4">
-			<p style="margin:0;font-size:15px;font-weight:600;color:#1a1a1a">${escapeHtml(shop.name)}</p>
-			<p style="margin:4px 0 0;font-size:13px;color:#555">${escapeHtml(shop.address)}</p>
+		return `<div style="display:block;padding:12px;min-width:0;width:min(260px,72vw);max-width:72vw;box-sizing:border-box;font-family:system-ui,sans-serif;line-height:1.45;overflow:visible;word-wrap:break-word;overflow-wrap:anywhere;white-space:normal">
+			<p style="display:block;margin:0;font-size:15px;font-weight:600;color:#38322f;word-break:break-word;overflow-wrap:anywhere">${escapeHtml(shop.name)}</p>
+			<p style="display:block;margin:4px 0 0;font-size:13px;color:#555;word-break:break-word;overflow-wrap:anywhere">${escapeHtml(shop.address)}</p>
 			${distance}
 			${phone}
 		</div>`;

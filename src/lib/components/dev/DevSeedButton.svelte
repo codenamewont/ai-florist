@@ -1,5 +1,7 @@
 <script>
 	import { dev } from '$app/environment';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { seedDevFlow } from '$lib/flowerFlow/devSeed.js';
 
 	/** 나중에 mute 하려면 true 로 변경 */
@@ -25,19 +27,46 @@
 		// 페이지 상단 const jobId = getFlowString(...) 갱신을 위해 새로고침
 		location.reload();
 	}
+
+	async function openResultDev() {
+		loading = true;
+		message = '';
+
+		const result = await seedDevFlow('result');
+
+		if (!result.ok) {
+			message = result.error;
+			loading = false;
+			return;
+		}
+
+		loading = false;
+		await goto(resolve('/result'));
+	}
 </script>
 
 {#if dev && !DEV_SEED_MUTED}
 	<div class="dev-seed fixed bottom-4 left-4 z-50 flex flex-col items-start gap-1">
-		<button
-			type="button"
-			disabled={loading}
-			onclick={fillDevData}
-			class="rounded border border-dashed border-subtle/60 bg-surface/95 px-3 py-1.5 text-xs text-muted shadow-sm backdrop-blur hover:border-subtle hover:text-ink disabled:opacity-50"
-			title="AI 없이 더미 job + sessionStorage 채우기 (개발용)"
-		>
-			{loading ? 'Seeding…' : 'Dev: Fill data'}
-		</button>
+		<div class="flex flex-wrap gap-1">
+			<button
+				type="button"
+				disabled={loading}
+				onclick={fillDevData}
+				class="rounded border border-dashed border-subtle/60 bg-surface/95 px-3 py-1.5 text-xs text-muted shadow-sm backdrop-blur hover:border-subtle hover:text-ink disabled:opacity-50"
+				title="AI 없이 더미 job + sessionStorage 채우기 (개발용)"
+			>
+				{loading ? 'Seeding…' : 'Dev: Fill data'}
+			</button>
+			<button
+				type="button"
+				disabled={loading}
+				onclick={openResultDev}
+				class="rounded border border-dashed border-subtle/60 bg-surface/95 px-3 py-1.5 text-xs text-muted shadow-sm backdrop-blur hover:border-subtle hover:text-ink disabled:opacity-50"
+				title="더미 job 생성 후 /result 로 이동 (개발용)"
+			>
+				{loading ? 'Seeding…' : 'Dev: → Result'}
+			</button>
+		</div>
 		{#if message && message !== 'Filled'}
 			<p class="max-w-48 rounded bg-surface/95 px-2 py-1 text-xs text-red-600 shadow-sm">
 				{message}

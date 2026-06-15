@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Header from '$lib/components/ui/Header.svelte';
@@ -13,7 +14,10 @@
 		buildBouquetRationale,
 		buildBriefBouquetTitle
 	} from '$lib/flowerFlow/resolveRecipeFlowers.js';
-	import { getFlowString } from '$lib/flowerFlow/session.js';
+	import { getFlowObject, getFlowString } from '$lib/flowerFlow/session.js';
+
+	/** dev에서 job fetch 없이 미리보기할 static 더미 이미지 */
+	const DEV_BOUQUET_PREVIEW = { url: '/dev/bouquet-m.svg' };
 
 	let loading = $state(true);
 	let error = $state('');
@@ -28,11 +32,25 @@
 	const bouquetImageSrc = $derived(selectedImage ? toDataUrl(selectedImage) : null);
 	const bouquetFlowers = $derived(resolveRecipeFlowers(recipe, getFlowerImageSrc));
 
+	function hydrateResultFromFlow() {
+		recipe = getFlowObject('recipe');
+		moodAnalysis = getFlowObject('moodAnalysis');
+		userInput = getFlowObject('userInput');
+		selectedImage = DEV_BOUQUET_PREVIEW;
+		mock = true;
+	}
+
 	onMount(async () => {
 		const jobId = getFlowString('jobId');
 
 		if (!jobId) {
-			await goto(resolve('/create'));
+			if (!dev) {
+				await goto(resolve('/create'));
+				return;
+			}
+
+			hydrateResultFromFlow();
+			loading = false;
 			return;
 		}
 
@@ -45,6 +63,12 @@
 			mock = Boolean(job.mock);
 			loading = false;
 		} catch (err) {
+			if (dev) {
+				hydrateResultFromFlow();
+				loading = false;
+				return;
+			}
+
 			error = err instanceof Error ? err.message : 'Failed to load result';
 			loading = false;
 		}
@@ -79,6 +103,12 @@
 				{:else if error}
 					<p class="text-sm text-red-600">{error}</p>
 				{:else}
+					{#if dev && !recipe}
+						<p class="mb-4 text-sm text-muted">
+							Dev: 왼쪽 하단 <strong>Dev: → Result</strong>로 더미 job까지 한 번에 채울 수 있습니다.
+						</p>
+					{/if}
+
 					{#if mock}
 						<p class="mb-6 text-sm text-muted">Running in mock mode (no Gemini API key).</p>
 					{/if}
