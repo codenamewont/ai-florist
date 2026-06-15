@@ -20,22 +20,48 @@ function primaryName(name) {
 }
 
 /**
- * Match a recipe flower string (e.g. "Pink tulip") to a catalog entry.
+ * Match a recipe flower string (e.g. "Pink tulip") to one catalog entry.
+ * Exact / primary-name matches first; modifier + species only as a last resort.
  * @param {string} label
  * @returns {(typeof flowerCatalogLite)[number] | null}
  */
-function matchCatalogFlower(label) {
+export function matchCatalogFlower(label) {
+	if (!label?.trim()) return null;
+
 	const normalized = normalizeName(label);
 
 	for (const flower of flowerCatalogLite) {
-		const catalogPrimary = primaryName(flower.name);
-		if (
-			normalized === catalogPrimary ||
-			normalized.includes(catalogPrimary) ||
-			catalogPrimary.includes(normalized)
-		) {
+		if (normalized === normalizeName(flower.name)) {
 			return flower;
 		}
+	}
+
+	const labelPrimary = primaryName(label);
+	/** @type {typeof flowerCatalogLite} */
+	const primaryMatches = [];
+
+	for (const flower of flowerCatalogLite) {
+		if (primaryName(flower.name) === labelPrimary) {
+			primaryMatches.push(flower);
+		}
+	}
+
+	if (primaryMatches.length === 1) {
+		return primaryMatches[0];
+	}
+
+	if (primaryMatches.length > 1) {
+		const exact = primaryMatches.find((flower) => normalizeName(flower.name) === normalized);
+		if (exact) return exact;
+		return primaryMatches.sort((a, b) => b.name.length - a.name.length)[0];
+	}
+
+	const bySpecificity = [...flowerCatalogLite].sort((a, b) => b.name.length - a.name.length);
+
+	for (const flower of bySpecificity) {
+		const catalogPrimary = primaryName(flower.name);
+		if (normalized === catalogPrimary) return flower;
+		if (normalized.endsWith(` ${catalogPrimary}`)) return flower;
 	}
 
 	return null;
@@ -141,6 +167,63 @@ export function truncateDescription(text, maxLength = 140) {
 	if (trimmed.length <= maxLength) return trimmed;
 
 	return `${trimmed.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+/**
+ * One-line context for the map order card (mood, recipient, or recipe concept).
+ * @param {{ moodKeywords?: string[], styleImpression?: string[] } | null | undefined} moodAnalysis
+ * @param {{ relationship?: string, notes?: string } | null | undefined} userInput
+ * @param {{ concept?: string } | null | undefined} recipe
+ */
+function buildMapOrderIntro(moodAnalysis, userInput, recipe) {
+	const recipient = userInput?.relationship?.trim();
+	const mood = pickKeywords(
+		[...(moodAnalysis?.moodKeywords ?? []), ...(moodAnalysis?.styleImpression ?? [])],
+		2
+	);
+	const hasCardMessage = Boolean(extractCardMessage(userInput));
+
+	if (hasCardMessage && recipient) {
+		return `A bouquet for ${recipient}, shaped around your card message`;
+	}
+	if (hasCardMessage) {
+		return 'A bouquet shaped around your card message';
+	}
+	if (mood && recipient) {
+		return `A ${mood} bouquet for ${recipient}`;
+	}
+	if (mood) {
+		return `A ${mood} bouquet from your moodboard`;
+	}
+	if (recipe?.concept?.trim()) {
+		return recipe.concept.trim();
+	}
+	if (recipient) {
+		return `A custom bouquet for ${recipient}`;
+	}
+	return 'Your custom bouquet design';
+}
+
+/**
+ * Map order card — short intro plus flower species (main → sub → greenery, capped).
+ * @param {{ mainFlowers?: string[], subFlowers?: string[], greenery?: string[], concept?: string } | null | undefined} recipe
+ * @param {{
+ *   moodAnalysis?: { moodKeywords?: string[], styleImpression?: string[] } | null,
+ *   userInput?: { relationship?: string, notes?: string } | null,
+ *   maxFlowers?: number
+ * }} [options]
+ */
+export function buildMapOrderDescription(recipe, options = {}) {
+	const { moodAnalysis = null, userInput = null, maxFlowers = 4 } = options;
+	const flowers = resolveRecipeFlowers(recipe, () => '').slice(0, maxFlowers);
+	if (flowers.length === 0) {
+		return 'Your selected bouquet design.';
+	}
+
+	const intro = buildMapOrderIntro(moodAnalysis, userInput, recipe);
+	const flowerList = flowers.map((flower) => flower.name).join(', ');
+
+	return `${intro}: ${flowerList}.`;
 }
 
 /**

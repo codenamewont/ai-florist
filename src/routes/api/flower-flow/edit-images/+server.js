@@ -6,6 +6,7 @@ import { formatBouquetEditPrompt } from '$lib/flowerFlow/bouquetImageFormat.js';
 import { normalizeRecipeLists } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 import { editBouquetImage, isImageGenerationConfigured } from '$lib/server/gemini/image.js';
 import { applyRecipeEdit } from '$lib/server/gemini/text.js';
+import { frameToBouquetOutput } from '$lib/server/openai/bouquetImageFrame.js';
 import { RATE_LIMITS } from '$lib/server/rateLimit.js';
 import { enforceRateLimit, json, readJsonBody, toErrorResponse } from '$lib/server/http.js';
 
@@ -42,10 +43,25 @@ function editForJob(jobId, job, instruction) {
 
 	const task = (async () => {
 		const priorRecipe = normalizeRecipeLists(job.recipe);
-		const updatedRecipe = await applyRecipeEdit(job.recipe, instruction.prompt);
+		const recipeEditPrompt =
+			instruction.mode === 'area'
+				? `Localized masked edit (selected region of the photo only): ${instruction.prompt}`
+				: instruction.prompt;
+		const updatedRecipe = normalizeRecipeLists(
+			await applyRecipeEdit(job.recipe, recipeEditPrompt)
+		);
 		const recipeChanged = JSON.stringify(updatedRecipe) !== JSON.stringify(priorRecipe);
 
 		const sourceImage = await loadGeneratedImageBytes(job.images.primary);
+		const normalizedBytes = await frameToBouquetOutput(
+			Buffer.from(sourceImage.base64, 'base64')
+		);
+		/** @type {{ base64: string, mimeType: string }} */
+		const normalizedSource = {
+			base64: normalizedBytes.toString('base64'),
+			mimeType: 'image/png'
+		};
+
 		const editPrompt = formatBouquetEditPrompt({
 			userPrompt: instruction.prompt,
 			mode: instruction.mode,
@@ -56,13 +72,13 @@ function editForJob(jobId, job, instruction) {
 
 		const mask =
 			instruction.mode === 'area' && instruction.selection.length >= 3
-				? buildAreaEditMask(sourceImage, instruction.selection)
+				? buildAreaEditMask(normalizedSource, instruction.selection)
 				: null;
 
 		console.log(
 			`[flower-flow] edit-images job=${jobId.slice(0, 8)} mode=${instruction.mode}${mask ? ' (masked)' : ''} → editing...`
 		);
-		const generatedImage = await editBouquetImage(sourceImage, editPrompt, { mask });
+		const generatedImage = await editBouquetImage(normalizedSource, editPrompt, { mask });
 		const images = await uploadGeneratedImages(
 			jobId,
 			generatedImage,
@@ -71,8 +87,7 @@ function editForJob(jobId, job, instruction) {
 		await updateJob(jobId, {
 			recipe: updatedRecipe,
 			imagePrompt: editPrompt,
-			images,
-			floristNote: null
+			images
 		});
 		console.log(
 			`[flower-flow] edit-images job=${jobId.slice(0, 8)} OK (mock=${!isImageGenerationConfigured()})`

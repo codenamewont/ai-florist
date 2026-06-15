@@ -5,7 +5,7 @@
 	import DescriptionCard from '$lib/components/ui/Artwork/DescriptionCard.svelte';
 	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
 	import Header from '$lib/components/ui/Header.svelte';
-	import { editImages, fetchJob, finalizeJob, toDataUrl } from '$lib/flowerFlow/api.js';
+	import { editImages, fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { buildBriefBouquetTitle } from '$lib/flowerFlow/resolveRecipeFlowers.js';
 	import { getFlowString, saveFlow } from '$lib/flowerFlow/session.js';
 
@@ -27,7 +27,6 @@
 	let generatedImage = $state(null);
 	let moodAnalysis = $state(null);
 	let editing = $state(false);
-	let continuing = $state(false);
 	/** @type {Array<{ id: string, role: 'user' | 'assistant', prompt?: string, mode?: string, status?: 'pending' | 'done' | 'error', afterImage?: { mimeType: string, base64: string } | null, error?: string }>} */
 	let chatMessages = $state([]);
 	/** @type {HTMLDivElement | null} */
@@ -74,13 +73,31 @@
 	});
 
 	/**
+	 * Map pointer position to image-relative 0–100% coords.
+	 * Compensates for object-contain letterboxing inside the overlay SVG box.
 	 * @param {PointerEvent} event
 	 */
 	function getPoint(event) {
-		const rect = /** @type {SVGElement} */ (event.currentTarget).getBoundingClientRect();
+		const svg = /** @type {SVGElement} */ (event.currentTarget);
+		const rect = svg.getBoundingClientRect();
+		const img = svg.parentElement?.querySelector('img');
+
+		if (!img?.naturalWidth || !img.naturalHeight) {
+			return {
+				x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)),
+				y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100))
+			};
+		}
+
+		const scale = Math.min(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
+		const contentWidth = img.naturalWidth * scale;
+		const contentHeight = img.naturalHeight * scale;
+		const offsetX = (rect.width - contentWidth) / 2;
+		const offsetY = (rect.height - contentHeight) / 2;
+
 		return {
-			x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)),
-			y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100))
+			x: Math.max(0, Math.min(100, ((event.clientX - rect.left - offsetX) / contentWidth) * 100)),
+			y: Math.max(0, Math.min(100, ((event.clientY - rect.top - offsetY) / contentHeight) * 100))
 		};
 	}
 
@@ -207,16 +224,7 @@
 			return;
 		}
 
-		continuing = true;
-		error = '';
-
-		try {
-			await finalizeJob(jobId);
-			await goto(resolve('/result'));
-		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to continue to result';
-			continuing = false;
-		}
+		await goto(resolve('/result'));
 	}
 
 	onMount(async () => {
@@ -446,7 +454,7 @@
 					<button
 						type="button"
 						aria-label={editing ? 'Applying edit' : 'Send edit'}
-						disabled={!prompt.trim() || editing || continuing}
+						disabled={!prompt.trim() || editing}
 						onclick={applyEdit}
 						class="flex size-9 shrink-0 items-center justify-center rounded-full bg-pill text-surface transition-opacity disabled:opacity-40"
 					>
@@ -476,11 +484,11 @@
 
 				<button
 					type="button"
-					disabled={editing || continuing}
+					disabled={editing}
 					onclick={continueToResult}
 					class={FLOW_CONTINUE_BUTTON}
 				>
-					{continuing ? 'Preparing result...' : 'Continue to result ->'}
+					Continue to result ->
 				</button>
 			</FlowContinueBar>
 		</section>

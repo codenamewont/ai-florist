@@ -75,11 +75,6 @@ export function mockGeneratedImage(label = 'Bouquet') {
 	};
 }
 
-/** @param {BouquetRecipe} recipe */
-export function mockFloristNote(recipe) {
-	return `A ${recipe.shape} built around ${recipe.mainFlowers.join(' and ')}, softened with ${recipe.subFlowers.join(', ')} and ${recipe.greenery.join(', ')}. The palette stays ${recipe.colors.join(', ')} with ${recipe.wrapping}. Budget target: ${recipe.budget}.`;
-}
-
 /**
  * Apply a simple swap edit to the recipe in mock mode (e.g. "change tulip to rose").
  * @param {BouquetRecipe} recipe

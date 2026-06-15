@@ -49,7 +49,6 @@ import { getSupabaseClient, throwSupabaseError } from '$lib/server/supabase.js';
  * @property {BouquetRecipe | null} recipe
  * @property {string | null} imagePrompt
  * @property {{ primary?: GeneratedImage }} images
- * @property {string | null} floristNote
  */
 
 /**
@@ -64,8 +63,7 @@ function fromRow(row) {
 		moodAnalysis: row.mood_analysis ?? null,
 		recipe: row.recipe ?? null,
 		imagePrompt: row.image_prompt ?? null,
-		images: row.images ?? {},
-		floristNote: row.florist_note ?? null
+		images: row.images ?? {}
 	};
 }
 
@@ -81,7 +79,6 @@ function toRowPatch(patch) {
 	if ('recipe' in patch) row.recipe = patch.recipe;
 	if ('imagePrompt' in patch) row.image_prompt = patch.imagePrompt;
 	if ('images' in patch) row.images = patch.images ?? {};
-	if ('floristNote' in patch) row.florist_note = patch.floristNote;
 
 	return row;
 }
@@ -99,8 +96,7 @@ export async function createJob(userInput = {}) {
 		moodAnalysis: null,
 		recipe: null,
 		imagePrompt: null,
-		images: {},
-		floristNote: null
+		images: {}
 	};
 
 	const { error } = await getSupabaseClient()

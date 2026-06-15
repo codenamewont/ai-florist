@@ -2,7 +2,7 @@
 /** @typedef {import('../flowerFlow/jobStore.js').MoodAnalysis} MoodAnalysis */
 /** @typedef {import('../flowerFlow/jobStore.js').UserInput} UserInput */
 
-import { matchFlowersFromMood } from '../flowerFlow/flowerDB.js';
+import { flowerDB, matchFlowersFromMood } from '../flowerFlow/flowerDB.js';
 import { formatStrictBouquetImagePrompt } from '../../flowerFlow/bouquetImageFormat.js';
 import { normalizeRecipeLists } from '../../flowerFlow/resolveRecipeFlowers.js';
 import { getTextModel, isGeminiConfigured, parseJsonFromText } from './client.js';
@@ -81,27 +81,19 @@ export async function buildImagePrompt(recipe) {
 	return formatStrictBouquetImagePrompt(recipe);
 }
 
-/**
- * @param {BouquetRecipe} recipe
- * @returns {Promise<string>}
- */
-export async function buildFloristNote(recipe) {
-	if (!isGeminiConfigured()) {
-		const { mockFloristNote } = await import('./mock.js');
-		return mockFloristNote(recipe);
+/** Flower names allowed in edited recipes — same source as initial recipe generation. */
+function getFlowerDBCandidatesByRole() {
+	/** @type {{ main: string[], filler: string[], line: string[], foliage: string[] }} */
+	const groups = { main: [], filler: [], line: [], foliage: [] };
+
+	for (const flower of flowerDB) {
+		if (flower.role === 'main') groups.main.push(flower.name);
+		else if (flower.role === 'filler') groups.filler.push(flower.name);
+		else if (flower.role === 'line') groups.line.push(flower.name);
+		else if (flower.role === 'foliage') groups.foliage.push(flower.name);
 	}
 
-	const model = getTextModel();
-	const prompt = `Write a concise florist note for a customer-facing result screen.
-Use this bouquet recipe:
-${JSON.stringify(recipe, null, 2)}
-
-Tone: warm, professional, specific.
-Mention why the main, accent, and greenery choices work together as one cohesive bouquet.
-Return plain text only.`;
-
-	const result = await model.generateContent(prompt);
-	return result.response.text().trim();
+	return groups;
 }
 
 /**
@@ -115,9 +107,13 @@ export async function applyRecipeEdit(recipe, editPrompt) {
 		return normalizeRecipeLists(mockApplyRecipeEdit(recipe, editPrompt));
 	}
 
+	const candidates = getFlowerDBCandidatesByRole();
 	const model = getTextModel();
 	const prompt = `You are a professional florist assistant.
 Update this bouquet recipe so it matches the customer's edit request.
+
+Allowed flowers from the catalog (use ONLY exact names from these lists):
+${JSON.stringify(candidates, null, 2)}
 
 Current recipe:
 ${JSON.stringify(recipe, null, 2)}
@@ -139,11 +135,15 @@ Return JSON only with the same schema:
 
 Rules:
 - Change only what the edit request implies; keep unrelated fields the same.
-- Use realistic florist flower names.
+- Use ONLY exact candidate names from the catalog lists above. Do not invent, rename, or substitute flowers.
+- If the edit only changes ribbon color, wrapping look, or other local styling without adding/removing/swapping flower species, keep mainFlowers, subFlowers, and greenery identical.
+- For localized masked edits (prompt mentions "selected region" or "masked edit"): update flower lists only when the request adds, removes, or swaps a species in that region (e.g. "change this part to roses"); otherwise keep mainFlowers, subFlowers, and greenery identical.
+- mainFlowers must come from candidates.main only (1-2 items).
+- subFlowers must combine candidates.filler and/or candidates.line only (1-4 items total).
+- greenery must come from candidates.foliage only (1-2 items).
 - If the edit changes flower types (swap, add, remove, or replace), update mainFlowers, subFlowers, and/or greenery so the recipe matches exactly.
-- Flower swaps (e.g. "change tulip to rose") must update the matching list entry; new flowers must use standard catalog names.
-- mainFlowers: 1-2 items. subFlowers: 1-4 items. greenery: 1-2 items.
-- The updated recipe is the sole source of truth for the next bouquet image — every listed flower must be included in the image prompt.`;
+- Flower swaps (e.g. "change tulip to rose") must update the matching list entry using exact catalog names.
+- The updated recipe is the sole source of truth for the next bouquet image — every listed flower must appear in the photo without omission.`;
 
 	const result = await model.generateContent(prompt);
 	return normalizeRecipeLists(

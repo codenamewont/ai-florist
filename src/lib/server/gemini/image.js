@@ -14,7 +14,7 @@ export function isImageGenerationConfigured() {
  * @returns {Promise<GeneratedImage>}
  */
 export async function generateBouquetImage(basePrompt) {
-	const suffix = `Generate one final bouquet image. ${BOUQUET_IMAGE_ASPECT_PROMPT} The STRICT RECIPE flower list above is mandatory: include every listed species and do not add any other flowers. Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.`;
+	const suffix = `Generate one final bouquet image. ${BOUQUET_IMAGE_ASPECT_PROMPT} The STRICT RECIPE flower list above is mandatory: include every listed species without omission and do not add any other flowers. Keep it realistic, orderable from a real florist, front-facing, and suitable for a customer preview.`;
 	const prompt = `${basePrompt}\n\n${suffix}`;
 
 	if (!isOpenAIConfigured()) {

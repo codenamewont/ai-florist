@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import { SvelteMap } from 'svelte/reactivity';
 	import { env } from '$env/dynamic/public';
 
 	let {
@@ -24,8 +23,11 @@
 	let mapInstance = $state(null);
 	/** @type {ReturnType<typeof window.kakao.maps.InfoWindow> | null} */
 	let infoWindow = null;
-	/** @type {SvelteMap<string, { marker: ReturnType<typeof window.kakao.maps.Marker>; shop: (typeof shops)[number] }>} */
-	let shopMarkerMap = new SvelteMap();
+	// 마커↔가게 내부 장부. 템플릿에서 반응형으로 읽지 않으므로 일반 Map 사용.
+	// SvelteMap이면 markers $effect가 같은 맵을 읽고/쓰며 무한 루프(effect_update_depth_exceeded)가 남.
+	/** @type {Map<string, { marker: ReturnType<typeof window.kakao.maps.Marker>; shop: (typeof shops)[number] }>} */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- 의도적 비반응형: 위 설명 참고
+	let shopMarkerMap = new Map();
 
 	function relayoutMap() {
 		mapInstance?.relayout?.();
@@ -186,6 +188,7 @@
 	});
 
 	// 리스트에서 가게 선택 시에만 이동 (panTo가 바뀔 때)
+	const SELECTED_MAP_LEVEL = 4;
 	$effect(() => {
 		const map = mapInstance;
 		const target = panTo;
@@ -195,7 +198,13 @@
 		const centerLng = Number(target.lng);
 		if (!Number.isFinite(centerLat) || !Number.isFinite(centerLng)) return;
 
-		map.panTo(new window.kakao.maps.LatLng(centerLat, centerLng));
+		const position = new window.kakao.maps.LatLng(centerLat, centerLng);
+
+		// 고른 가게를 또렷하게 보여주려고, 너무 멀리 있을 때만 가까이 확대한 뒤 이동
+		if (map.getLevel() > SELECTED_MAP_LEVEL) {
+			map.setLevel(SELECTED_MAP_LEVEL, { anchor: position, animate: true });
+		}
+		map.panTo(position);
 	});
 
 	/**
