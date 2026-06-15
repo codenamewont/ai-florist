@@ -60,7 +60,10 @@ export function buildFloristOrderMessage(input) {
 		`Would a reservation be possible?`;
 
 	const segments = [
-		{ text: "Hello, I'd like to inquire about a flower order. It's a bouquet for ", highlight: false },
+		{
+			text: "Hello, I'd like to inquire about a flower order. It's a bouquet for ",
+			highlight: false
+		},
 		{ text: relationship, highlight: true },
 		{ text: ' for ', highlight: false },
 		{ text: occasion, highlight: true },

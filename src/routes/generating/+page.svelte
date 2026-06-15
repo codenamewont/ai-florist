@@ -6,7 +6,11 @@
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import GenerationActivityFeed from '$lib/components/ui/generating/GenerationActivityFeed.svelte';
 	import { buildRecipe, generateImages } from '$lib/flowerFlow/api.js';
-	import { createGenerationProgress, DEFAULT_ESTIMATED_MS, MOCK_ESTIMATED_MS } from '$lib/flowerFlow/generationProgress.js';
+	import {
+		createGenerationProgress,
+		DEFAULT_ESTIMATED_MS,
+		MOCK_ESTIMATED_MS
+	} from '$lib/flowerFlow/generationProgress.js';
 	import { createGeneratingArtworkCycle } from '$lib/flowerFlow/generatingArtworkCycle.js';
 	import {
 		clearFlow,

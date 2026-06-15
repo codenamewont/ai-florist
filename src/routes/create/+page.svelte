@@ -5,9 +5,7 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import ContextForm from '$lib/components/ui/create/ContextForm.svelte';
-	import FlowContinueBar, {
-		FLOW_CONTINUE_BUTTON
-	} from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
 	import {
 		consumeDevCreateSnapshot,
 		deleteFlowKey,

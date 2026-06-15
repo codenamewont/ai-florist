@@ -1,14 +1,7 @@
 <script>
 	import flowerIconUrl from '$lib/assets/flower.svg';
 
-	let {
-		name,
-		nameKo,
-		wordOfFlower,
-		wordOfFlowerKo,
-		imageSrc,
-		role = 'main'
-	} = $props();
+	let { name, nameKo, wordOfFlower, wordOfFlowerKo, imageSrc, role = 'main' } = $props();
 
 	let flipped = $state(false);
 
@@ -26,7 +19,7 @@
 
 <button
 	type="button"
-	class="flip-card h-[16.25rem] w-40 shrink-0 snap-start cursor-pointer border-none bg-transparent p-0 text-left"
+	class="flip-card h-[16.25rem] w-40 shrink-0 cursor-pointer snap-start border-none bg-transparent p-0 text-left"
 	aria-label={flipped ? `${nameKo} card, show English` : `${name} card, show Korean`}
 	onclick={toggleFlip}
 >
@@ -48,7 +41,7 @@
 				/>
 			</div>
 
-			<div class="shrink-0 px-3 pb-4 pt-2">
+			<div class="shrink-0 px-3 pt-2 pb-4">
 				<h3
 					class="flex min-h-8 items-center justify-center text-center text-sm leading-tight tracking-wide text-ink"
 				>
@@ -79,7 +72,7 @@
 				/>
 			</div>
 
-			<div class="shrink-0 px-3 pb-4 pt-2">
+			<div class="shrink-0 px-3 pt-2 pb-4">
 				<h3
 					class="flex min-h-8 items-center justify-center text-center text-sm leading-tight tracking-wide text-ink"
 				>

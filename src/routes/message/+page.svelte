@@ -6,9 +6,7 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MessageForm from '$lib/components/ui/message/MessageForm.svelte';
-	import FlowContinueBar, {
-		FLOW_CONTINUE_BUTTON
-	} from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
 	import { skipDevImages } from '$lib/flowerFlow/devSeed.js';
 	import {
 		consumeDevMessageSnapshot,
@@ -32,9 +30,7 @@
 
 	const artworkVariant = $derived(hasMessage ? 'message1' : 'upload2');
 
-	const artworkTitle = $derived(
-		hasMessage ? 'Your message' : ARTWORK_CARD_DEFAULTS.message.title
-	);
+	const artworkTitle = $derived(hasMessage ? 'Your message' : ARTWORK_CARD_DEFAULTS.message.title);
 
 	const artworkDescription = $derived(
 		hasMessage ? message.trim() : ARTWORK_CARD_DEFAULTS.message.description

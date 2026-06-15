@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { env } from '$env/dynamic/public';
 
 	let {
@@ -23,8 +24,8 @@
 	let mapInstance = $state(null);
 	/** @type {ReturnType<typeof window.kakao.maps.InfoWindow> | null} */
 	let infoWindow = null;
-	/** @type {Map<string, { marker: ReturnType<typeof window.kakao.maps.Marker>; shop: (typeof shops)[number] }>} */
-	let shopMarkerMap = new Map();
+	/** @type {SvelteMap<string, { marker: ReturnType<typeof window.kakao.maps.Marker>; shop: (typeof shops)[number] }>} */
+	let shopMarkerMap = new SvelteMap();
 
 	function relayoutMap() {
 		mapInstance?.relayout?.();
@@ -226,9 +227,7 @@
 			{mapError}
 		</div>
 	{:else if !mapReady}
-		<div
-			class="absolute inset-0 flex items-center justify-center bg-track text-sm text-muted"
-		>
+		<div class="absolute inset-0 flex items-center justify-center bg-track text-sm text-muted">
 			Loading map...
 		</div>
 	{/if}

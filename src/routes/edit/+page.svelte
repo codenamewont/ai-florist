@@ -3,9 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DescriptionCard from '$lib/components/ui/Artwork/DescriptionCard.svelte';
-	import FlowContinueBar, {
-		FLOW_CONTINUE_BUTTON
-	} from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
 	import Header from '$lib/components/ui/Header.svelte';
 	import { editImages, fetchJob, finalizeJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { buildBriefBouquetTitle } from '$lib/flowerFlow/resolveRecipeFlowers.js';
@@ -185,9 +183,7 @@
 			const afterImage = result.images?.primary ?? null;
 			generatedImage = afterImage;
 			chatMessages = chatMessages.map((message) =>
-				message.id === assistantMessageId
-					? { ...message, status: 'done', afterImage }
-					: message
+				message.id === assistantMessageId ? { ...message, status: 'done', afterImage } : message
 			);
 			saveFlow({
 				editInstruction: instruction,
@@ -248,7 +244,7 @@
 </script>
 
 {#snippet editableImageFrame(image, editable = false)}
-	<div class="relative w-full max-w-44 sm:max-w-52 overflow-hidden bg-track ring-1 ring-black/5">
+	<div class="relative w-full max-w-44 overflow-hidden bg-track ring-1 ring-black/5 sm:max-w-52">
 		{#if image}
 			<img
 				src={toDataUrl(image)}
@@ -339,8 +335,12 @@
 		<section
 			class="flex min-h-0 w-full shrink-0 flex-col border-b border-line px-6 py-6 lg:w-[44%] lg:border-r lg:border-b-0 lg:px-10 lg:py-8 lg:pb-12"
 		>
-			<div class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-col items-center justify-center gap-6">
-				<div class="w-full max-w-24 overflow-hidden bg-track shadow-sm ring-1 ring-black/5 sm:max-w-28 lg:max-w-75">
+			<div
+				class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-col items-center justify-center gap-6"
+			>
+				<div
+					class="w-full max-w-24 overflow-hidden bg-track shadow-sm ring-1 ring-black/5 sm:max-w-28 lg:max-w-75"
+				>
 					{#if loading}
 						<div class="aspect-[3/4] w-full animate-pulse bg-placeholder"></div>
 					{:else if imageSrc}
@@ -359,9 +359,7 @@
 		</section>
 
 		<section class="relative flex min-h-0 flex-1 flex-col overflow-hidden pb-44 lg:pb-8">
-			<div
-				class="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-5 lg:py-6"
-			>
+			<div class="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 px-6 py-5 lg:py-6">
 				<div class="shrink-0">
 					<p class="text-xs tracking-[0.2em] text-muted uppercase">Edit bouquet</p>
 					<h2 class="mt-1 text-lg">Tell us how you want to refine it.</h2>
@@ -430,7 +428,9 @@
 					</p>
 				{/if}
 
-				<div class="flex w-full items-center gap-2 rounded-full border border-pill bg-surface py-1.5 pr-1.5 pl-5">
+				<div
+					class="flex w-full items-center gap-2 rounded-full border border-pill bg-surface py-1.5 pr-1.5 pl-5"
+				>
 					<textarea
 						bind:value={prompt}
 						rows="1"

@@ -1,9 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import FlowContinueBar, {
-		FLOW_CONTINUE_BUTTON
-	} from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
 	import GrowthMetaphorIllustration from '$lib/components/ui/landing/GrowthMetaphorIllustration.svelte';
 
 	function handleStart() {
@@ -15,7 +13,7 @@
 	class="relative flex min-h-dvh flex-col bg-surface px-6 py-8 pb-[3.75rem] font-sans text-ink sm:px-10 sm:py-10 lg:px-14 lg:pb-8"
 	aria-label="Every bouquet starts with a muse — seed to bouquet growth metaphor"
 >
-	<div class="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col justify-center">
+	<div class="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col justify-center">
 		<GrowthMetaphorIllustration />
 
 		<p class="mt-3 text-left text-sm tracking-[0.18em] text-muted sm:mt-4 sm:text-base">

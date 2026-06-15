@@ -236,8 +236,7 @@ export function buildBouquetRationale(moodAnalysis, userInput, recipe) {
 	}
 
 	if (cardMessage && mainFlower) {
-		const messageRef =
-			cardMessage.length <= 40 ? `your message, "${cardMessage}"` : 'your message';
+		const messageRef = cardMessage.length <= 40 ? `your message, "${cardMessage}"` : 'your message';
 		parts.push(
 			`For ${messageRef}, ${mainFlower.name} (${mainFlower.wordOfFlower}) felt like the right fit.`
 		);

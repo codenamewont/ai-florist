@@ -56,7 +56,10 @@ export async function POST({ request }) {
 		}
 
 		if (!job.images?.primary) {
-			return json({ error: 'bouquet image is missing. Generate images first.', code: 'bad_request' }, 400);
+			return json(
+				{ error: 'bouquet image is missing. Generate images first.', code: 'bad_request' },
+				400
+			);
 		}
 
 		const priorRecipe = normalizeRecipeLists(job.recipe);
@@ -75,11 +78,7 @@ export async function POST({ request }) {
 		const provider = getImageProvider();
 		const mask =
 			mode === 'area' && selection.length >= 3
-				? buildAreaEditMask(
-						sourceImage,
-						selection,
-						provider === 'gemini' ? 'gemini' : 'openai'
-					)
+				? buildAreaEditMask(sourceImage, selection, provider === 'gemini' ? 'gemini' : 'openai')
 				: null;
 
 		console.log(

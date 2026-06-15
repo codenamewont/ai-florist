@@ -20,7 +20,9 @@ export function formatStrictBouquetImagePrompt(recipe) {
 		'Generate a realistic Korean florist bouquet product photo.',
 		'',
 		'STRICT RECIPE — the bouquet must contain ONLY these flowers and NO other flower species:',
-		allFlowers.length > 0 ? allFlowers.map((flower) => `- ${flower}`).join('\n') : '- (none listed)',
+		allFlowers.length > 0
+			? allFlowers.map((flower) => `- ${flower}`).join('\n')
+			: '- (none listed)',
 		'',
 		`Main focal blooms (each must be clearly visible): ${mains.join(', ') || 'none'}`,
 		`Supporting filler/line flowers (each must appear): ${subs.join(', ') || 'none'}`,

@@ -19,13 +19,13 @@
 </script>
 
 <section
-	class="relative flex w-full shrink-0 flex-col border-b border-line lg:min-h-0 lg:h-full lg:w-[44%] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-b-0"
+	class="relative flex w-full shrink-0 flex-col border-b border-line lg:h-full lg:min-h-0 lg:w-[44%] lg:shrink-0 lg:overflow-y-auto lg:border-r lg:border-b-0"
 >
 	<!--
 		mobile: row · desktop: 꽃 슬롯 높이 고정 → 설명 카드 길이와 무관하게 Y·크기 유지
 	-->
 	<div
-		class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-row items-start gap-8 px-6 pt-6 pb-8 lg:flex-col lg:items-center lg:justify-start lg:gap-4 lg:px-6 lg:pb-12 lg:pt-[calc(50%-5rem)]"
+		class="mx-auto flex min-h-0 w-full max-w-100 flex-1 flex-row items-start gap-8 px-6 pt-6 pb-8 lg:flex-col lg:items-center lg:justify-start lg:gap-4 lg:px-6 lg:pt-[calc(50%-5rem)] lg:pb-12"
 	>
 		<div
 			class="flex h-[11rem] shrink-0 items-end justify-center sm:h-[13rem] lg:h-[min(24rem,36vh)] lg:w-full"
@@ -43,7 +43,7 @@
 			{/if}
 		</div>
 
-		<div class="min-w-0 shrink-0 lg:w-full lg:flex lg:justify-center">
+		<div class="min-w-0 shrink-0 lg:flex lg:w-full lg:justify-center">
 			<DescriptionCard {title} {description} mode={cardMode} />
 		</div>
 	</div>

@@ -68,7 +68,9 @@ Rules:
 - Budget should be ${budget}.`;
 
 	const result = await model.generateContent(prompt);
-	return normalizeRecipeLists(/** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text())));
+	return normalizeRecipeLists(
+		/** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text()))
+	);
 }
 
 /**
@@ -144,5 +146,7 @@ Rules:
 - The updated recipe is the sole source of truth for the next bouquet image — every listed flower must be included in the image prompt.`;
 
 	const result = await model.generateContent(prompt);
-	return normalizeRecipeLists(/** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text())));
+	return normalizeRecipeLists(
+		/** @type {BouquetRecipe} */ (parseJsonFromText(result.response.text()))
+	);
 }

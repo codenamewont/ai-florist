@@ -5,12 +5,14 @@
 	import Header from '$lib/components/ui/Header.svelte';
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import BouquetFlowerCarousel from '$lib/components/ui/result/BouquetFlowerCarousel.svelte';
-	import FlowContinueBar, {
-		FLOW_CONTINUE_BUTTON
-	} from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
 	import { fetchJob, toDataUrl } from '$lib/flowerFlow/api.js';
 	import { getFlowerImageSrc } from '$lib/flowerFlow/flowerImagePaths.js';
-	import { resolveRecipeFlowers, buildBouquetRationale, buildBriefBouquetTitle } from '$lib/flowerFlow/resolveRecipeFlowers.js';
+	import {
+		resolveRecipeFlowers,
+		buildBouquetRationale,
+		buildBriefBouquetTitle
+	} from '$lib/flowerFlow/resolveRecipeFlowers.js';
 	import { getFlowString } from '$lib/flowerFlow/session.js';
 
 	let loading = $state(true);
@@ -63,7 +65,9 @@
 		/>
 
 		<section class="relative flex min-h-0 flex-1 flex-col pb-[3.75rem] lg:overflow-hidden lg:pb-8">
-			<div class="flex min-h-0 flex-1 flex-col justify-center overflow-hidden px-6 py-6 lg:px-8 lg:py-8">
+			<div
+				class="flex min-h-0 flex-1 flex-col justify-center overflow-hidden px-6 py-6 lg:px-8 lg:py-8"
+			>
 				{#if loading}
 					<p class="text-sm text-muted">Loading result...</p>
 				{:else if error}

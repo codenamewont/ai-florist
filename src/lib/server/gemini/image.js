@@ -99,12 +99,15 @@ export async function editBouquetImage(sourceImage, editPrompt, options = {}) {
 
 	const model = getImageModel();
 	/** @type {import('@google/generative-ai').Part[]} */
-	const parts = [{ text: editPrompt }, {
-		inlineData: {
-			data: sourceImage.base64,
-			mimeType: sourceImage.mimeType
+	const parts = [
+		{ text: editPrompt },
+		{
+			inlineData: {
+				data: sourceImage.base64,
+				mimeType: sourceImage.mimeType
+			}
 		}
-	}];
+	];
 
 	if (mask) {
 		parts.push(

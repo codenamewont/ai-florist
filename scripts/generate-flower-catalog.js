@@ -132,7 +132,9 @@ async function main() {
 
 	const size = process.env.OPENAI_IMAGE_CATALOG_SIZE || '1024x1536';
 	const quality = process.env.OPENAI_IMAGE_CATALOG_QUALITY || 'low';
-	console.log(`대상: ${targets.length}종 · ${size} · quality=${quality}${dryRun ? ' (dry-run)' : ''}`);
+	console.log(
+		`대상: ${targets.length}종 · ${size} · quality=${quality}${dryRun ? ' (dry-run)' : ''}`
+	);
 
 	for (const flower of targets) {
 		const outPath = join(OUT_DIR, `${flower.id}.png`);

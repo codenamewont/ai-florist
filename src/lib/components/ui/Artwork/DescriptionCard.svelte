@@ -7,9 +7,14 @@
 	} = $props();
 </script>
 
-<div class="w-64 max-w-full flex-none border border-line-strong bg-white px-4 py-3 shadow-sm lg:px-6 lg:py-5">
+<div
+	class="w-64 max-w-full flex-none border border-line-strong bg-white px-4 py-3 shadow-sm lg:px-6 lg:py-5"
+>
 	<h3
-		class={['text-sm leading-snug font-semibold', mode === 'instruction' ? 'text-muted' : 'text-ink']}
+		class={[
+			'text-sm leading-snug font-semibold',
+			mode === 'instruction' ? 'text-muted' : 'text-ink'
+		]}
 	>
 		{title}
 	</h3>

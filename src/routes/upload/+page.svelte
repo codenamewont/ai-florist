@@ -5,9 +5,7 @@
 	import Artwork from '$lib/components/ui/Artwork/Artwork.svelte';
 	import MoodboardGrid from '$lib/components/ui/upload/MoodboardGrid.svelte';
 	import SnsFeedUpload from '$lib/components/ui/upload/SnsFeedUpload.svelte';
-	import FlowContinueBar, {
-		FLOW_CONTINUE_BUTTON
-	} from '$lib/components/ui/FlowContinueBar.svelte';
+	import FlowContinueBar, { FLOW_CONTINUE_BUTTON } from '$lib/components/ui/FlowContinueBar.svelte';
 	import { analyzeMood } from '$lib/flowerFlow/api.js';
 	import {
 		deleteFlowKey,
@@ -61,12 +59,12 @@
 		},
 		character: {
 			title: 'Their character',
-			description: 'A face, a gesture, a presence. Something in them is starting to take floral form.'
+			description:
+				'A face, a gesture, a presence. Something in them is starting to take floral form.'
 		},
 		location: {
 			title: 'A sense of place',
-			description:
-				'City grit or quiet coast. Where they belong roots the arrangement in memory.'
+			description: 'City grit or quiet coast. Where they belong roots the arrangement in memory.'
 		}
 	};
 

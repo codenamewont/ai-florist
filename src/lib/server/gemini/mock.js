@@ -107,8 +107,7 @@ export function mockApplyRecipeEdit(recipe, editPrompt) {
 			if (!label.toLowerCase().includes(fromToken)) return label;
 
 			const colorPrefix = label.match(/^(\w+)\s+/i)?.[1];
-			const capitalizedTo =
-				toToken.charAt(0).toUpperCase() + toToken.slice(1).toLowerCase();
+			const capitalizedTo = toToken.charAt(0).toUpperCase() + toToken.slice(1).toLowerCase();
 
 			if (colorPrefix && !fromToken.includes(' ')) {
 				return `${colorPrefix} ${capitalizedTo}`;

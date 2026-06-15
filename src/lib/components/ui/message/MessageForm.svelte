@@ -8,7 +8,7 @@
 		'Thank you for always being there',
 		'I love you',
 		"I'm proud of you",
-		'Congratulations!',
+		'Congratulations!'
 	];
 
 	const selectedPreset = $derived(presets.find((preset) => preset === message) ?? null);

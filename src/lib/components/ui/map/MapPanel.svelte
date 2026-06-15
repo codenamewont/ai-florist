@@ -71,10 +71,12 @@
 	{/if}
 
 	<div class="flex min-h-0 flex-1 flex-col gap-6 px-6 pb-8 md:px-10 lg:flex-row lg:px-12 lg:pb-10">
-		<div class="relative flex min-h-64 flex-1 flex-col overflow-hidden border border-line lg:min-h-0">
+		<div
+			class="relative flex min-h-64 flex-1 flex-col overflow-hidden border border-line lg:min-h-0"
+		>
 			<KakaoMap
-				initialLat={initialLat}
-				initialLng={initialLng}
+				{initialLat}
+				{initialLng}
 				{shops}
 				selectedId={selectedShopId}
 				{fitBounds}
@@ -96,7 +98,7 @@
 			{#if loading && shops.length === 0}
 				<p class="text-sm text-muted">Searching for flower shops...</p>
 			{:else}
-				<ShopList shops={shops} bind:selectedId={selectedShopId} onselect={handleShopSelect} />
+				<ShopList {shops} bind:selectedId={selectedShopId} onselect={handleShopSelect} />
 			{/if}
 		</div>
 	</div>

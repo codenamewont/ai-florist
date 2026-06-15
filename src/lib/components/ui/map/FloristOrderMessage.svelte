@@ -1,8 +1,5 @@
 <script>
-	let {
-		enPlainText = '',
-		koPlainText = ''
-	} = $props();
+	let { enPlainText = '', koPlainText = '' } = $props();
 
 	/** @type {'ko' | 'en'} */
 	let activeLang = $state('ko');
@@ -61,10 +58,14 @@
 			rows={4}
 			value={activeText}
 			oninput={handleInput}
-			aria-label={activeLang === 'ko' ? '꽃집 주문 멘트 (한국어)' : 'Florist order message (English)'}
+			aria-label={activeLang === 'ko'
+				? '꽃집 주문 멘트 (한국어)'
+				: 'Florist order message (English)'}
 		></textarea>
 	{:else}
-		<p class="min-w-0 flex-1 text-sm text-muted">Complete the flow to generate your order message.</p>
+		<p class="min-w-0 flex-1 text-sm text-muted">
+			Complete the flow to generate your order message.
+		</p>
 	{/if}
 
 	<div class="flex shrink-0 flex-col items-stretch gap-2">

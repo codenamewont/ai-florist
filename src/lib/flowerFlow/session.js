@@ -56,7 +56,8 @@ export function getFlowUserInput() {
 	const input = getFlowObject('userInput');
 	if (!input) return {};
 
-	const { notes: _notes, ...createOnly } = input;
+	const createOnly = { ...input };
+	delete createOnly.notes;
 	return createOnly;
 }
 

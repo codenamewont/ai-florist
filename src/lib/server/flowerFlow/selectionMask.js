@@ -21,7 +21,8 @@ function pointInPolygon(x, y, polygon) {
 		const yi = polygon[i].y;
 		const xj = polygon[j].x;
 		const yj = polygon[j].y;
-		const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + Number.EPSILON) + xi;
+		const intersects =
+			yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + Number.EPSILON) + xi;
 		if (intersects) inside = !inside;
 	}
 	return inside;
@@ -68,11 +69,18 @@ function readJpegDimensions(buffer) {
  * @param {string} mimeType
  */
 export function readImageDimensions(buffer, mimeType) {
-	if (mimeType.includes('png') || (buffer[0] === 0x89 && buffer.toString('ascii', 1, 4) === 'PNG')) {
+	if (
+		mimeType.includes('png') ||
+		(buffer[0] === 0x89 && buffer.toString('ascii', 1, 4) === 'PNG')
+	) {
 		return readPngDimensions(buffer);
 	}
 
-	if (mimeType.includes('jpeg') || mimeType.includes('jpg') || (buffer[0] === 0xff && buffer[1] === 0xd8)) {
+	if (
+		mimeType.includes('jpeg') ||
+		mimeType.includes('jpg') ||
+		(buffer[0] === 0xff && buffer[1] === 0xd8)
+	) {
 		return readJpegDimensions(buffer);
 	}
 

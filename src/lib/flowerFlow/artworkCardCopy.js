@@ -16,8 +16,7 @@ export const ARTWORK_CARD_DEFAULTS = {
 	},
 	generating: {
 		title: 'Crafting your bouquet',
-		description:
-			'We are turning their mood, photos, and message into a one-of-a-kind arrangement.'
+		description: 'We are turning their mood, photos, and message into a one-of-a-kind arrangement.'
 	},
 	map: {
 		title: 'Choose a florist',
