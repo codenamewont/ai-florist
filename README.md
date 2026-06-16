@@ -2,11 +2,11 @@
 
 ## Author and links
 
-| Field       | Info                                          |
-| ----------- | --------------------------------------------- |
-| Source code | https://github.com/codenamewont/ai-florist    |
-| Live site   | https://ai-florist-production.up.railway.app/ |
-| Demo video  | https://youtu.be/m0v6wYegKc0                  |
+| Field       | Info                                           |
+| ----------- | ---------------------------------------------- |
+| Source code | https://git.prototyping.id/20220552/ai-florist |
+| Live site   | https://ai-florist-production.up.railway.app/  |
+| Demo video  | https://youtu.be/m0v6wYegKc0                   |
 
 | Name        | Student ID | Email                  |
 | ----------- | ---------- | ---------------------- |
