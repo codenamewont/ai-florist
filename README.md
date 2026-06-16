@@ -142,8 +142,19 @@ flowchart TB
 
 ### AI pipeline
 
-```
-User Input + Image → Mood Analysis Gemini → Recipe Gemini + Flower DB → Bouquet Image OpenAI → Edit optional → Result & Order
+```mermaid
+flowchart LR
+    A["User Input + Image"]
+    B["Mood Analysis Gemini"]
+    C["Recipe Gemini + Flower DB"]
+    D["Bouquet Image OpenAI"]
+    E["Edit optional"]
+    F["Result & Order"]
+
+    A --> B --> C --> D --> E --> F
+
+    classDef highlight fill:#fff9e6,stroke:#333,color:#111
+    class C highlight
 ```
 
 | Stage                     | Provider                    | Output                                              |
@@ -223,4 +234,4 @@ We did not use a heavy framework pattern. Most flow goes through the page routes
 - [`docs/chaewon_chatlog.md`](docs/chaewon_chatlog.md)
 - [`docs/jieun_chatlog.md`](docs/jieun_chatlog.md)
 
-**Documentation & APIs:** [SvelteKit](https://kit.svelte.dev/), [Google Gemini API](https://ai.google.dev/), [OpenAI API](https://platform.openai.com/), [Supabase](https://supabase.com/), [Kakao Developers](https://developers.kakao.com/), [p5.js](https://p5js.org/), [Tailwind CSS](https://tailwindcss.com/), [Railway](https://railway.app/).
+**Documentation & APIs:** [SvelteKit](https://kit.svelte.dev/), [Google Gemini API](https://ai.google.dev/), [OpenAI API](https://platform.openai.com/), [Supabase](https://supabase.com/), [Kakao Developers](https://developers.kakao.com/), [Railway](https://railway.app/).
