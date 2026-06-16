@@ -152,9 +152,6 @@ flowchart LR
     F["Result & Order"]
 
     A --> B --> C --> D --> E --> F
-
-    classDef highlight fill:#fff9e6,stroke:#333,color:#111
-    class C highlight
 ```
 
 | Stage                     | Provider                    | Output                                              |
