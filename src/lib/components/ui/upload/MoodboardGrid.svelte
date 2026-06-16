@@ -65,10 +65,30 @@
 </script>
 
 <div class="moodboard min-h-0 w-full flex-1">
-	<UploadTile label="Color" bind:file={colorFile} class="tile tile-color" />
-	<UploadTile label="Season" bind:file={seasonFile} class="tile tile-season" />
-	<UploadTile label="Character" bind:file={characterFile} class="tile tile-character" />
-	<UploadTile label="Location" bind:file={locationFile} class="tile tile-location" />
+	<UploadTile
+		label="Fashion"
+		prompt="What outfit reminds you of them?"
+		bind:file={colorFile}
+		class="tile tile-color"
+	/>
+	<UploadTile
+		label="Season"
+		prompt="What season reminds you of them?"
+		bind:file={seasonFile}
+		class="tile tile-season"
+	/>
+	<UploadTile
+		label="Location"
+		prompt="What place matches their vibe?"
+		bind:file={characterFile}
+		class="tile tile-character"
+	/>
+	<UploadTile
+		label="Cafe"
+		prompt="What kind of cafe feels like them?"
+		bind:file={locationFile}
+		class="tile tile-location"
+	/>
 </div>
 
 <style>

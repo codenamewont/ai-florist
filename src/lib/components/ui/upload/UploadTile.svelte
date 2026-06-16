@@ -5,6 +5,8 @@
 	// both the moodboard and the SNS feed.
 	let {
 		label = null,
+		/** 빈 타일 중앙에 표시할 안내 문장 */
+		prompt = null,
 		showLabel = true,
 		class: klass = '',
 		style = '',
@@ -44,7 +46,7 @@
 		type="file"
 		accept="image/*"
 		class="sr-only"
-		aria-label={label ? `Add a ${label} image` : 'Add an image'}
+		aria-label={prompt ?? (label ? `Add a ${label} image` : 'Add an image')}
 		onchange={pick}
 	/>
 
@@ -63,13 +65,15 @@
 		</span>
 	{:else}
 		<div
-			class="flex flex-col items-center gap-3 text-subtle transition-transform group-hover:scale-105"
+			class="flex flex-col items-center gap-3 px-4 text-center text-subtle transition-transform group-hover:scale-105"
 		>
 			<span
-				class="flex size-10 items-center justify-center rounded-full border border-current text-xl leading-none"
+				class="flex size-10 shrink-0 items-center justify-center rounded-full border border-current text-xl leading-none"
 				aria-hidden="true">+</span
 			>
-			{#if label && showLabel}
+			{#if prompt}
+				<span class="max-w-[14rem] text-sm leading-snug text-muted">{prompt}</span>
+			{:else if label && showLabel}
 				<span class="text-sm tracking-[0.15em] uppercase">{label}</span>
 			{/if}
 		</div>

@@ -48,8 +48,8 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-	<header class="shrink-0 px-6 py-8 md:px-10 lg:px-12 lg:py-10">
-		<h1 class="text-2xl leading-relaxed font-light text-muted md:text-3xl lg:text-[2rem]">
+	<header class="shrink-0 px-6 pt-8 pb-3 md:px-10 lg:px-12 lg:pt-10 lg:pb-4">
+		<h1 class="text-2xl leading-relaxed font-light text-ink md:text-3xl lg:text-[2rem]">
 			Find a nearby florist
 		</h1>
 		<p class="mt-3 text-sm text-muted">Move the map, then refresh to search this area.</p>
@@ -59,7 +59,6 @@
 		{#if mock}
 			<p class="mt-2 text-xs text-muted">Showing sample shops (no Kakao API key).</p>
 		{/if}
-		<div class="mt-6 border-b border-pill lg:mt-8"></div>
 	</header>
 
 	<div class="shrink-0 px-6 pb-4 md:px-10 lg:px-12">
@@ -94,7 +93,7 @@
 			</button>
 		</div>
 
-		<div class="w-full shrink-0 lg:w-72 lg:overflow-y-auto">
+		<div class="w-full min-w-0 shrink-0 lg:w-72 lg:overflow-y-auto">
 			{#if loading && shops.length === 0}
 				<p class="text-sm text-muted">Searching for flower shops...</p>
 			{:else}

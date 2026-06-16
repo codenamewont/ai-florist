@@ -40,7 +40,11 @@
 </script>
 
 <div class="feed min-h-0 w-full flex-1">
-	<UploadTile bind:file={firstFile} class="sns-tile" />
+	<UploadTile
+		prompt="Upload screenshots of their social feed"
+		bind:file={firstFile}
+		class="sns-tile"
+	/>
 </div>
 
 <style>

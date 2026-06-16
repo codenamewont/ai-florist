@@ -5,6 +5,14 @@ export const BOUQUET_IMAGE_ASPECT = '3:4';
 export const BOUQUET_IMAGE_ASPECT_PROMPT =
 	'Vertical portrait composition with a 3:4 aspect ratio (width:height). Frame the full bouquet without cropping stems or wrapping.';
 
+/** 최초 generate prompt opening — catalog 톤·장면 설정 */
+export const BOUQUET_CATALOG_SCENE_PROMPT =
+	'A professional florist product photograph of a handcrafted bouquet, photographed for a premium flower shop catalog.';
+
+/** generate + whole edit 공통 — 인물/손 노출 방지 */
+export const BOUQUET_NO_PERSON_CONSTRAINT =
+	'Bouquet only. No person. No hands. No body parts visible.';
+
 /**
  * @param {{ mainFlowers?: string[], subFlowers?: string[], greenery?: string[] }} recipe
  */
@@ -47,6 +55,7 @@ export function formatStrictRecipeConstraints(recipe) {
 		'- Include EVERY listed flower without omission — each must be clearly visible; none may be missing, hidden, or left out',
 		'- Do not swap or substitute any listed species unless the edit request explicitly requires that change',
 		'- Real cut flowers only; no fantasy colors or impossible hybrids',
+		`- ${BOUQUET_NO_PERSON_CONSTRAINT}`,
 		`- ${BOUQUET_IMAGE_ASPECT_PROMPT}`,
 		'- White background, soft natural lighting, front-facing, orderable from a real Korean florist'
 	].join('\n');
@@ -60,6 +69,7 @@ export function formatStrictRecipeConstraints(recipe) {
 export function formatStrictBouquetImagePrompt(recipe) {
 	return [
 		'Generate a realistic Korean florist bouquet product photo.',
+		BOUQUET_CATALOG_SCENE_PROMPT,
 		'',
 		formatStrictRecipeConstraints(recipe)
 	].join('\n');
@@ -72,37 +82,40 @@ export function formatStrictBouquetImagePrompt(recipe) {
  *   mode?: string,
  *   selection?: Array<{ x: number, y: number }>,
  *   recipe?: { mainFlowers?: string[], subFlowers?: string[], greenery?: string[] },
- *   recipeChanged?: boolean
+ *   recipeChanged?: boolean,
+ *   targetObject?: string,
+ *   normalizedPrompt?: string
  * }} options
  * @returns {string}
  */
 export function formatBouquetEditPrompt(options) {
-	const { userPrompt, mode, selection, recipe, recipeChanged = false } = options;
+	const {
+		userPrompt,
+		mode,
+		selection,
+		recipe,
+		recipeChanged = false,
+		targetObject = 'selected object',
+		normalizedPrompt = userPrompt
+	} = options;
 	const isAreaEdit = mode === 'area' && selection && selection.length >= 3;
 
 	if (isAreaEdit) {
 		return [
-			'You are editing the attached florist bouquet photograph with a binary mask.',
-			'This is a localized inpainting edit — NOT a full bouquet redesign or re-render.',
+			'You are editing a realistic bouquet product photo.',
+			'The transparent mask is only a rough localization guide.',
+			'Do NOT fill the entire masked shape.',
+			'Identify the actual object inside the selected area that matches the user request.',
+			"Edit only that object's visible surface.",
+			"Preserve the object's original shape, folds, shadows, highlights, texture, and boundaries.",
+			'Preserve all unselected objects exactly: flowers, leaves, stems, wrapping paper, background, lighting, and composition.',
+			'If the request is a color change, recolor only the target object material while keeping realistic shading.',
+			'Do not add new flowers, new ribbon, new objects, text, hands, or people.',
+			'Do not paint a flat solid color block inside the mask.',
 			'',
-			`Edit request (masked region only): ${userPrompt}`,
-			'',
-			'How to edit inside the mask:',
-			'- Apply the edit request only to whatever is inside the transparent mask region (flowers, ribbon, wrapping, foliage, etc.)',
-			'- The request may be a color/style tweak OR a content swap — e.g. replace blooms in this area with roses, change ribbon color, adjust wrapping',
-			'- When swapping flowers inside the mask, render the requested species naturally in that region; blend stems, lighting, and edges with the surrounding bouquet',
-			'- Keep realistic material detail — petal texture, fabric folds, paper creases, shadows, and lighting — seamless with the rest of the photo',
-			'- Do not paste a flat color block; the edited area should look naturally photographed',
-			'- Do not use solid black unless the user explicitly asked for black',
-			'',
-			'Mask rules (mandatory):',
-			'- Transparent pixels in the attached mask = the ONLY area you may change',
-			'- Opaque pixels in the mask = leave completely unchanged',
-			'- Do NOT recolor, restyle, brighten, blur, regenerate, or swap species outside the mask',
-			'- Do NOT apply the edit request to the whole image',
-			'',
-			'Preserve everywhere outside the mask:',
-			'- All flowers, foliage, wrapping, ribbon, background, lighting, and framing exactly as in the input photo',
+			`User request: ${userPrompt}`,
+			`Inferred target object: ${targetObject}`,
+			`Normalized edit instruction: ${normalizedPrompt}`,
 			'',
 			'Output exactly one edited photo. No before/after collage.'
 		].join('\n');

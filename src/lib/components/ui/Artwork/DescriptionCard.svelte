@@ -20,7 +20,7 @@
 	</h3>
 	<p
 		class={[
-			'mt-2 text-xs',
+			'mt-2 line-clamp-4 text-xs',
 			mode === 'instruction' ? 'leading-snug text-muted' : 'leading-relaxed text-ink'
 		]}
 	>

@@ -170,42 +170,26 @@ export function truncateDescription(text, maxLength = 140) {
 }
 
 /**
- * One-line context for the map order card (mood, recipient, or recipe concept).
- * @param {{ moodKeywords?: string[], styleImpression?: string[] } | null | undefined} moodAnalysis
- * @param {{ relationship?: string, notes?: string } | null | undefined} userInput
- * @param {{ concept?: string } | null | undefined} recipe
+ * Map DescriptionCard — 1~2줄 작품 설명 (꽃 종류 + 넓은 꽃말 테마).
+ * @param {string | null | undefined} word
+ * @returns {string | null}
  */
-function buildMapOrderIntro(moodAnalysis, userInput, recipe) {
-	const recipient = userInput?.relationship?.trim();
-	const mood = pickKeywords(
-		[...(moodAnalysis?.moodKeywords ?? []), ...(moodAnalysis?.styleImpression ?? [])],
-		2
-	);
-	const hasCardMessage = Boolean(extractCardMessage(userInput));
-
-	if (hasCardMessage && recipient) {
-		return `A bouquet for ${recipient}, shaped around your card message`;
-	}
-	if (hasCardMessage) {
-		return 'A bouquet shaped around your card message';
-	}
-	if (mood && recipient) {
-		return `A ${mood} bouquet for ${recipient}`;
-	}
-	if (mood) {
-		return `A ${mood} bouquet from your moodboard`;
-	}
-	if (recipe?.concept?.trim()) {
-		return recipe.concept.trim();
-	}
-	if (recipient) {
-		return `A custom bouquet for ${recipient}`;
-	}
-	return 'Your custom bouquet design';
+function broadFlowerTheme(word) {
+	if (!word?.trim()) return null;
+	const w = word.toLowerCase();
+	if (/love|romance|passion|devotion|사랑|연애|로맨/.test(w)) return 'love';
+	if (/friend|companionship|우정|친구/.test(w)) return 'friendship';
+	if (/health|healing|vitality|건강|회복/.test(w)) return 'health';
+	if (/thank|grateful|감사/.test(w)) return 'gratitude';
+	if (/joy|happy|celebrat|cheer|기쁨|축하/.test(w)) return 'joy';
+	if (/hope|faith|희망/.test(w)) return 'hope';
+	if (/warm|tender|gentle|따뜻|부드러/.test(w)) return 'warmth';
+	if (/peace|calm|평화|차분/.test(w)) return 'peace';
+	return null;
 }
 
 /**
- * Map order card — short intro plus flower species (main → sub → greenery, capped).
+ * Map order card — brief artwork-style blurb (flowers + broad themes, max ~2 lines).
  * @param {{ mainFlowers?: string[], subFlowers?: string[], greenery?: string[], concept?: string } | null | undefined} recipe
  * @param {{
  *   moodAnalysis?: { moodKeywords?: string[], styleImpression?: string[] } | null,
@@ -214,16 +198,30 @@ function buildMapOrderIntro(moodAnalysis, userInput, recipe) {
  * }} [options]
  */
 export function buildMapOrderDescription(recipe, options = {}) {
-	const { moodAnalysis = null, userInput = null, maxFlowers = 4 } = options;
+	const { maxFlowers = 3 } = options;
 	const flowers = resolveRecipeFlowers(recipe, () => '').slice(0, maxFlowers);
+
 	if (flowers.length === 0) {
-		return 'Your selected bouquet design.';
+		return 'A hand-tied bouquet shaped from your moodboard.';
 	}
 
-	const intro = buildMapOrderIntro(moodAnalysis, userInput, recipe);
-	const flowerList = flowers.map((flower) => flower.name).join(', ');
+	const names = flowers.map((flower) => flower.name).join(', ');
+	const themes = [
+		...new Set(
+			flowers
+				.flatMap((flower) => [
+					broadFlowerTheme(flower.wordOfFlower),
+					broadFlowerTheme(flower.wordOfFlowerKo)
+				])
+				.filter(Boolean)
+		)
+	].slice(0, 2);
 
-	return `${intro}: ${flowerList}.`;
+	if (themes.length === 0) {
+		return truncateDescription(`Featuring ${names}.`, 120);
+	}
+
+	return truncateDescription(`Featuring ${names} — notes of ${themes.join(' and ')}.`, 140);
 }
 
 /**
@@ -286,13 +284,22 @@ function getPrimaryFlowerFromRecipe(recipe) {
 	return matchCatalogFlower(label);
 }
 
+/** result/map DescriptionCard 본문 최대 글자수 */
+export const ARTWORK_DESCRIPTION_MAX_LENGTH = 120;
+
 /**
  * Why this bouquet fits — mood from images, message, and main flower language.
  * @param {{ moodKeywords?: string[], styleImpression?: string[], colorPalette?: string[] } | null | undefined} moodAnalysis
  * @param {{ relationship?: string, notes?: string } | null | undefined} userInput
  * @param {{ mainFlowers?: string[] } | null | undefined} recipe
+ * @param {number} [maxLength=ARTWORK_DESCRIPTION_MAX_LENGTH]
  */
-export function buildBouquetRationale(moodAnalysis, userInput, recipe) {
+export function buildBouquetRationale(
+	moodAnalysis,
+	userInput,
+	recipe,
+	maxLength = ARTWORK_DESCRIPTION_MAX_LENGTH
+) {
 	const normalized = normalizeRecipeLists(recipe ?? {});
 	const recipient = userInput?.relationship?.trim();
 	const subject = recipient ? `${recipient}'s` : 'The';
@@ -330,12 +337,15 @@ export function buildBouquetRationale(moodAnalysis, userInput, recipe) {
 	}
 
 	if (parts.length === 0) {
-		return recipient
-			? `This bouquet reflects the feeling in ${recipient}'s images.`
-			: 'This bouquet reflects the feeling in the images.';
+		return truncateDescription(
+			recipient
+				? `This bouquet reflects the feeling in ${recipient}'s images.`
+				: 'This bouquet reflects the feeling in the images.',
+			maxLength
+		);
 	}
 
-	return parts.join(' ');
+	return truncateDescription(parts.join(' '), maxLength);
 }
 
 /**

@@ -88,7 +88,7 @@ export function readImageDimensions(buffer, mimeType) {
 }
 
 /** @param {number} width @param {number} height @param {Uint8Array} rgba */
-function encodePng(width, height, rgba) {
+export function encodeOpenAIMaskPng(width, height, rgba) {
 	/** @type {number[]} */
 	const rows = [];
 	let stride = 0;
@@ -143,12 +143,12 @@ function crc32(data) {
 }
 
 /**
- * OpenAI mask: transparent pixels = edit region, opaque = preserve.
+ * OpenAI mask RGBA: alpha 0 = edit region, opaque white = preserve.
  * @param {number} width
  * @param {number} height
- * @param {Array<{ x: number, y: number }>} selection
+ * @param {Array<{ x: number, y: number }>} selection percent coords
  */
-export function buildOpenAIEditMask(width, height, selection) {
+export function buildEditMaskRgba(width, height, selection) {
 	const polygon = closePolygon(
 		selection.map((point) => ({
 			x: (point.x / 100) * width,
@@ -175,7 +175,71 @@ export function buildOpenAIEditMask(width, height, selection) {
 		}
 	}
 
-	return encodePng(width, height, rgba);
+	return rgba;
+}
+
+/** @param {Uint8Array} rgba */
+export function countEditablePixels(rgba) {
+	let count = 0;
+	for (let i = 3; i < rgba.length; i += 4) {
+		if (rgba[i] === 0) count += 1;
+	}
+	return count;
+}
+
+/**
+ * @param {Uint8Array} maskRgba
+ * @param {number} width
+ * @param {number} height
+ * @param {number} radius
+ */
+export function erodeEditMask(maskRgba, width, height, radius) {
+	const eroded = new Uint8Array(maskRgba.length);
+	eroded.set(maskRgba);
+
+	for (let y = 0; y < height; y += 1) {
+		for (let x = 0; x < width; x += 1) {
+			const index = (y * width + x) * 4;
+			if (maskRgba[index + 3] !== 0) continue;
+
+			let keep = true;
+			for (let dy = -radius; dy <= radius && keep; dy += 1) {
+				for (let dx = -radius; dx <= radius; dx += 1) {
+					if (dx * dx + dy * dy > radius * radius) continue;
+					const nx = x + dx;
+					const ny = y + dy;
+					if (nx < 0 || ny < 0 || nx >= width || ny >= height) {
+						keep = false;
+						break;
+					}
+					const neighborIndex = (ny * width + nx) * 4;
+					if (maskRgba[neighborIndex + 3] !== 0) {
+						keep = false;
+						break;
+					}
+				}
+			}
+
+			if (!keep) {
+				eroded[index] = 255;
+				eroded[index + 1] = 255;
+				eroded[index + 2] = 255;
+				eroded[index + 3] = 255;
+			}
+		}
+	}
+
+	return eroded;
+}
+
+/**
+ * OpenAI mask: transparent pixels = edit region, opaque = preserve.
+ * @param {number} width
+ * @param {number} height
+ * @param {Array<{ x: number, y: number }>} selection
+ */
+export function buildOpenAIEditMask(width, height, selection) {
+	return encodeOpenAIMaskPng(width, height, buildEditMaskRgba(width, height, selection));
 }
 
 /**

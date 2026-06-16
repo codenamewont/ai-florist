@@ -44,36 +44,22 @@
 	let submitting = $state(false);
 	let error = $state('');
 
-	const recipientLabel = $derived.by(() => {
-		const who = typeof userInput.relationship === 'string' ? userInput.relationship : '';
-		return who ? who.toLowerCase() : 'them';
-	});
-
-	const recipientPronoun = $derived.by(() => {
-		const style = typeof userInput.style === 'string' ? userInput.style.toLowerCase() : '';
-		if (style === 'masculine') return 'his';
-		if (style === 'feminine') return 'her';
-		return 'their';
-	});
-
 	const MOODBOARD_TILE_COPY = {
 		color: {
-			title: 'A hint of color',
-			description:
-				'The first thread pulled. Warm or cool, bold or shy. Their palette begins to speak.'
+			title: 'Their fashion',
+			description: 'One glimpse of their style. Add the other moodboard images when ready.'
 		},
 		season: {
-			title: 'Season in the air',
-			description: 'Spring lightness or winter hush. Time of year will breathe through the bouquet.'
+			title: 'Their season',
+			description: 'A season that fits them. Keep building the moodboard on the right.'
 		},
 		character: {
-			title: 'Their character',
-			description:
-				'A face, a gesture, a presence. Something in them is starting to take floral form.'
+			title: 'Their place',
+			description: 'A place that matches their vibe. A few more photos to go.'
 		},
 		location: {
-			title: 'A sense of place',
-			description: 'City grit or quiet coast. Where they belong roots the arrangement in memory.'
+			title: 'Their cafe',
+			description: 'A cafe that feels like them. Almost a full moodboard.'
 		}
 	};
 
@@ -89,7 +75,8 @@
 
 			return {
 				title: 'Their social world',
-				description: `Upload a screenshot of ${recipientPronoun} feed. One glance is often enough to sense the mood.`
+				description:
+					'Share a glimpse of their world! One glance is often enough to sense the mood.'
 			};
 		}
 
@@ -100,8 +87,9 @@
 
 		if (count === 0) {
 			return {
-				title: 'Gather their mood',
-				description: `Four small glimpses of color, season, character, and place. Together they become the palette for a bouquet made for ${recipientLabel}.`
+				title: 'Build their moodboard',
+				description:
+					'Upload fashion, season, place, and cafe photos on the right. Each one shapes their bouquet.'
 			};
 		}
 
@@ -111,23 +99,21 @@
 
 		if (count === 4) {
 			return {
-				title: 'A moodboard whole',
-				description:
-					'Color, season, character, and place. The collage is complete, and their bouquet is ready to take shape.'
+				title: 'Moodboard complete',
+				description: 'Four photos gathered. Their bouquet is ready to take shape.'
 			};
 		}
 
 		if (count === 2) {
 			return {
 				title: 'Taking shape',
-				description:
-					'The moodboard is finding its rhythm. Keep adding. Each image is another note in their story.'
+				description: 'Keep adding photos on the right. Each one sharpens the bouquet.'
 			};
 		}
 
 		return {
 			title: 'Almost there',
-			description: 'One last glimpse and their world will be fully gathered on the page.'
+			description: 'One more image and the moodboard is complete.'
 		};
 	});
 
@@ -239,7 +225,7 @@
 
 			<div class="mb-3 flex shrink-0 justify-center px-4 lg:mb-4 lg:px-6">
 				<div
-					class="relative grid w-full max-w-[15rem] grid-cols-2 items-center rounded-full bg-white p-1 shadow-md ring-1 ring-black/5"
+					class="relative grid w-full max-w-[15rem] grid-cols-2 items-center rounded-full bg-white p-1 ring-1 ring-black/5"
 					role="tablist"
 					aria-label="Upload mode"
 				>
